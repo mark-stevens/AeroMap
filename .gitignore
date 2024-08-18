@@ -1,0 +1,65 @@
+.vs
+*.pdb
+*.ilk
+*.exp
+*.idb
+*.tlog
+*.sbr
+*.log
+*.out
+*.user
+*.bsc
+*FileListAbsolute.txt
+
+# specific AeroMap files
+
+AeroMap/GeneratedFiles
+AeroMap/x64
+AeroMap/Debug
+AeroMap/Release
+
+# specific Lib files 
+
+Lib/CppUnitLite/x64
+Lib/gdal-3.2.1/x64
+Lib/jpeg-9a/x64
+Lib/laslib/x64
+Lib/laszip/x64
+Lib/libpng-1.6.20/x64
+Lib/pdal-2.3/x64
+Lib/proj-7.1.1/build_vs14_x64/src/x64
+Lib/zlib/x64
+
+# test files
+
+Test*.exe
+UnitTests/TestGdal/Data/point_out.dbf
+UnitTests/TestGdal/x64
+UnitTests/TestRasterFile/x64
+UnitTests/TestShapeFile/x64
+UnitTests/TestShots/x64
+ 
+# too big files
+opencv_world420d.dll
+
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
