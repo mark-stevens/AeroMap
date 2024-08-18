@@ -5,9 +5,9 @@
 Originally, AeroMap was a C/C++ port of [OpenDroneMap](https://github.com/OpenDroneMap/ODM). I have always been fascinated by
 the seeming magic of photogrammetry as well as drone mapping in general. When I discovered ODM, I had finally found a project
 that walked me through, step by step, how a big pile of pictures could be turned into accurate 3D models and orthophotos. Being a
-C programmer, I could see the best way to really learn this would to port it from Python into my own "native" language :-).
+C programmer, I could see the best way to really learn this would be to port it from Python into my own "native" language :-).
 
-After the initial port I added some limited lidar functionality and decided to publish it on GitHub should anyone find it useful.
+After the initial port, I added some limited lidar functionality and decided to publish it on GitHub should anyone find it useful.
 
 Now that I'm hooked, I am continuing development. Here is my near-term road map:
     
