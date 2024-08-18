@@ -1,4 +1,4 @@
-![logo-crop-10](https://github.com/user-attachments/assets/e0e3a73e-73dc-45a0-888f-381da508d935)
+![image](https://github.com/user-attachments/assets/c6b6143e-ac47-4477-a3dd-f842f65bf415)
 
 <b>AeroMap is a simple desktop drone mapping application.</b>
 
