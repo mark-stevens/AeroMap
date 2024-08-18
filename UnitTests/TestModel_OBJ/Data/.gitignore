@@ -1,0 +1,7 @@
+# we want these obj files (models)
+#
+
+!temp.obj
+!temp_cube.obj
+!test_crate.obj
+!test_cube.obj
