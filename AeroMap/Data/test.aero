@@ -1,0 +1,10 @@
+project
+	name=AeroMap Test Project
+	srs=---
+drone
+	input = D:/test_aero/images
+	output = D:/test_aero
+lidar
+	src = D:/Geodata/lidar/1.2_2.laz
+	src = D:/Geodata/lidar/1.2_3.las
+	src = D:/Geodata/lidar/autzen_trim.las
