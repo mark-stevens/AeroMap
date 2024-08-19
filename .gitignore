@@ -1,5 +1,6 @@
 .vs
 *.pdb
+*.ipdb
 *.ilk
 *.exp
 *.idb
@@ -50,6 +51,7 @@ opencv_world420d.dll
 *.lo
 *.o
 *.obj
+*.iobj
 
 # Precompiled Headers
 *.gch

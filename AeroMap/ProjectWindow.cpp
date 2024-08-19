@@ -120,20 +120,22 @@ void ProjectWindow::UpdateUI()
 
 	// generated outputs
 
-	str = XString::Format("DTM: %s", QFile::exists(tree.odm_dem_dtm.c_str()) ? tree.odm_dem_dtm.c_str() : "---");
-	QTreeWidgetItem* pItem = new QTreeWidgetItem(QStringList(str.c_str()), static_cast<int>(ItemType::DroneOutputDTM));
-	pItem->setToolTip(0, str.c_str());
-	mp_ItemDroneOutput->addChild(pItem);
-
-	str = XString::Format("DSM: %s", QFile::exists(tree.odm_dem_dsm.c_str()) ? tree.odm_dem_dsm.c_str() : "---");
-	pItem = new QTreeWidgetItem(QStringList(str.c_str()), static_cast<int>(ItemType::DroneOutputDSM));
-	pItem->setToolTip(0, str.c_str());
-	mp_ItemDroneOutput->addChild(pItem);
-
 	str = XString::Format("Orthophoto: %s", QFile::exists(tree.odm_orthophoto_tif.c_str()) ? tree.odm_orthophoto_tif.c_str() : "---");
-	pItem = new QTreeWidgetItem(QStringList(str.c_str()), static_cast<int>(ItemType::DroneOutputOrtho));
+	QTreeWidgetItem* pItem = new QTreeWidgetItem(QStringList(str.c_str()), static_cast<int>(ItemType::DroneOutputOrtho));
 	pItem->setToolTip(0, str.c_str());
 	mp_ItemDroneOutput->addChild(pItem);
+
+	//TODO:
+	// need support for viewing/analysing these
+	//str = XString::Format("DTM: %s", QFile::exists(tree.odm_dem_dtm.c_str()) ? tree.odm_dem_dtm.c_str() : "---");
+	//pItem = new QTreeWidgetItem(QStringList(str.c_str()), static_cast<int>(ItemType::DroneOutputDTM));
+	//pItem->setToolTip(0, str.c_str());
+	//mp_ItemDroneOutput->addChild(pItem);
+
+	//str = XString::Format("DSM: %s", QFile::exists(tree.odm_dem_dsm.c_str()) ? tree.odm_dem_dsm.c_str() : "---");
+	//pItem = new QTreeWidgetItem(QStringList(str.c_str()), static_cast<int>(ItemType::DroneOutputDSM));
+	//pItem->setToolTip(0, str.c_str());
+	//mp_ItemDroneOutput->addChild(pItem);
 
 	// lidar items
 
@@ -197,7 +199,7 @@ void ProjectWindow::OnItemDoubleClicked(QTreeWidgetItem* pItem, int column)
 
 	ItemType itemType = static_cast<ItemType>(pItem->type());
 
-	if (pItem = mp_ItemDroneRoot)
+	if (pItem == mp_ItemDroneRoot)
 	{
 		GetApp()->ActivateView(AeroMap::ViewType::Drone);
 	}
