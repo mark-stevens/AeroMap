@@ -102,12 +102,12 @@
     <rect>
      <x>16</x>
      <y>48</y>
-     <width>71</width>
+     <width>129</width>
      <height>16</height>
     </rect>
    </property>
    <property name="text">
-    <string>Crop:</string>
+    <string>Crop Buffer:</string>
    </property>
   </widget>
   <widget class="QDoubleSpinBox" name="spinCrop">
@@ -147,7 +147,7 @@
     <rect>
      <x>16</x>
      <y>72</y>
-     <width>89</width>
+     <width>129</width>
      <height>16</height>
     </rect>
    </property>

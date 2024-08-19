@@ -38,8 +38,7 @@ enum class Section
 };
 
 Project::Project()
-	: mp_SRS(nullptr)
-	, mb_IsDirty(false)
+	: mb_IsDirty(false)
 {
 	mv_Lidar.reserve(32);
 }
@@ -232,6 +231,8 @@ bool Project::IsDirty()
 
 int Project::LoadImageList()
 {
+	GetApp()->LogWrite("Loading images...");
+
 	QDir dir(GetProject().GetDroneInputPath().c_str());
 	dir.setFilter(QDir::Files | QDir::NoSymLinks | QDir::NoDotAndDotDot);
 
@@ -323,11 +324,6 @@ const char* Project::GetDefaultExt()
 	return DEFAULT_EXT;
 }
 
-OGRSpatialReference* Project::GetSRS()
-{
-	return mp_SRS;
-}
-
 int Project::GetIndentLevel(XString& str)
 {
 	// Return # of leading tabs in str.
@@ -348,16 +344,6 @@ void Project::FreeResources()
 	// Free project resources.
 	//
 
-	if (mp_SRS)
-	{
-//TODO:
-//like this?
-		//DestroySpatialReference
-		OGRFree(mp_SRS);
-		//delete mp_SRS;
-		mp_SRS = nullptr;
-	}
-
 	// free lidar resources
 
 	for (auto lidar : mv_Lidar)
@@ -369,6 +355,8 @@ void Project::FreeResources()
 		}
 	}
 	mv_Lidar.clear();
+
+	m_ImageList.clear();
 }
 
 int Project::GetLidarFileCount()
@@ -505,7 +493,8 @@ void Project::InitArg()
 	//				decimates ~99% of the points. Useful for speeding up generation of DEM results in very large
 	//				datasets. Default: 1
 	arg.dem_euclidean_map = false;
-	// --dem-euclidean-map   Computes an euclidean raster map for each DEM. The map reports the distance from each cell to
+	// --dem-euclidean-map   
+	//				Computes an euclidean raster map for each DEM. The map reports the distance from each cell to
 	//				the nearest NODATA value (before any hole filling takes place). This can be useful to isolate
 	//				the areas that have been filled. Default: False
 	arg.orthophoto_resolution = 5.0;
@@ -518,7 +507,8 @@ void Project::InitArg()
 	//				shrunk by N meters. Use 0 to disable cropping. Default: 3
 
 	arg.ignore_gsd = false;
-	// --ignore-gsd          Ignore Ground Sampling Distance (GSD).A memory and processor hungry change relative to the
+	// --ignore-gsd 
+	//				Ignore Ground Sampling Distance (GSD).A memory and processor hungry change relative to the
 	//				default behavior if set to true. Ordinarily, GSD estimates are used to cap the maximum
 	//				resolution of image outputs and resizes images when necessary, resulting in faster processing
 	//				and lower memory usage. Since GSD is an estimate, sometimes ignoring it can result in slightly
@@ -526,10 +516,12 @@ void Project::InitArg()
 	//				it, and even then: do not use it. Default: False
 
 	arg.pc_classify = false;
-	// --pc-classify         Classify the point cloud outputs. You can control the behavior of this option by tweaking the
+	// --pc-classify
+	//				Classify the point cloud outputs. You can control the behavior of this option by tweaking the
 	//				--dem-* parameters. Default: False
 	arg.pc_rectify = false;
-		// --pc-rectify          Perform ground rectification on the point cloud. This means that wrongly classified ground
+	// --pc-rectify          
+	//				Perform ground rectification on the point cloud. This means that wrongly classified ground
 	//				points will be re-classified and gaps will be filled. Useful for generating DTMs. Default:
 	//				False
 
@@ -544,15 +536,19 @@ void Project::InitArg()
 	//				to 0 to disable sampling. Default: 0
 
 	arg.use_3dmesh = false;
-	// --use-3dmesh          Use a full 3D mesh to compute the orthophoto instead of a 2.5D mesh. This option is a bit
+	// --use-3dmesh 
+	//				Use a full 3D mesh to compute the orthophoto instead of a 2.5D mesh. This option is a bit
 	//				faster and provides similar results in planar areas. Default: False
 	arg.skip_3dmodel = false;
-	// --skip-3dmodel        Skip generation of a full 3D model. This can save time if you only need 2D results such as
+	// --skip-3dmodel        
+	//				Skip generation of a full 3D model. This can save time if you only need 2D results such as
 	//				orthophotos and DEMs. Default: False
 	arg.skip_report = false;
-	// --skip-report         Skip generation of PDF report. This can save time if you don't need a report. Default: False
+	// --skip-report         
+	//				Skip generation of PDF report. This can save time if you don't need a report. Default: False
 	arg.skip_orthophoto = false;
-	// --skip-orthophoto     Skip generation of the orthophoto. This can save time if you only need 3D results or DEMs.
+	// --skip-orthophoto     
+	//				Skip generation of the orthophoto. This can save time if you only need 3D results or DEMs.
 	//				Default: False
 
 	arg.mesh_oct_tree_depth = 11;
@@ -560,7 +556,8 @@ void Project::InitArg()
 	//				Octree depth used in the mesh reconstruction, increase to get more vertices, recommended
 	//				values are 8-12. Default: 11
 	arg.fast_orthophoto = false;
-	// --fast-orthophoto     Skips dense reconstruction and 3D model generation. It generates an orthophoto directly from
+	// --fast-orthophoto     
+	//				Skips dense reconstruction and 3D model generation. It generates an orthophoto directly from
 	//				the sparse reconstruction. If you just need an orthophoto and do not need a full 3D model,
 	//				turn on this option. Default: False
 
@@ -816,7 +813,7 @@ void Project::InitTree()
 	tree.odm_georef_path = XString::CombinePath(ms_DroneOutputPath, "odm_georeferencing");
 	tree.odm_georeferencing_model_laz = XString::CombinePath(tree.odm_georef_path, "odm_georeferenced_model.laz");
 
-	tree.odm_dem = XString::CombinePath(ms_DroneOutputPath, "odm_den");
+	tree.odm_dem = XString::CombinePath(ms_DroneOutputPath, "odm_dem");
 	tree.odm_dem_dtm = XString::CombinePath(tree.odm_dem, "dtm.tif");
 	tree.odm_dem_dsm = XString::CombinePath(tree.odm_dem, "dsm.tif");
 

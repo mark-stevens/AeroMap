@@ -161,7 +161,6 @@ public:
 
 	XString GetFileName();
 	XString GetName();
-	OGRSpatialReference* GetSRS();
 
 	XString GetDroneInputPath();
 	void    SetDroneInputPath(XString path);
@@ -184,8 +183,6 @@ signals:
 	void projectChanged_sig();				// any change to project structure
 
 private:
-
-	OGRSpatialReference* mp_SRS;			// current srs for project
 
 	std::vector<ImageType> m_ImageList;		// drone photogrammetry input images
 	std::vector<LidarType> mv_Lidar;		// lidar files
