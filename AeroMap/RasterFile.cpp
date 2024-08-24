@@ -59,29 +59,28 @@ void RasterFile::Load(const char* fileName, bool loadData)
 
 		int bandCount = mp_DS->GetRasterCount();
 
-		const OGRSpatialReference* pSRS = mp_DS->GetSpatialRef();
-		if (mp_DS != nullptr)
+		double geoTransform[6] = { 0 };
+		CPLErr err = mp_DS->GetGeoTransform(geoTransform);
+		mb_HasGeoTransform = (err == CPLErr::CE_None);
+
+		if (mb_HasGeoTransform)
 		{
-			double geoTransform[6] = { 0 };
-			CPLErr err = mp_DS->GetGeoTransform(geoTransform);
-			mb_HasGeoTransform = (err == CPLErr::CE_None);
+			mf_PixelSizeX = geoTransform[1];
+			mf_PixelSizeY = geoTransform[5];
 
-			if (mb_HasGeoTransform)
-			{
-				mf_PixelSizeX = geoTransform[1];
-				mf_PixelSizeY = geoTransform[5];
+			// these are the gdal extents which straddle the outer rows/columns, 
+			// giving a slightly larger (1/2 pixel size) extent than what i would
+			// use. it's not necessarily wrong, just be aware - possibly adding 
+			// something like an "on edge" flag to the getextents() method.
+			m_Extents.x0 = geoTransform[0];		// nw corner
+			m_Extents.y0 = geoTransform[3];
+			m_Extents.x1 = m_Extents.x0 + mf_PixelSizeX * static_cast<double>(m_SizeX);		// se corner
+			m_Extents.y1 = m_Extents.y0 + mf_PixelSizeY * static_cast<double>(m_SizeY);
 
-				// these are the gdal extents which straddle the outer rows/columns, 
-				// giving a slightly larger (1/2 pixel size) extent than what i would
-				// use. it's not necessarily wrong, just be aware - possibly adding 
-				// something like an "on edge" flag to the getextents() method.
-				m_Extents.x0 = geoTransform[0];		// nw corner
-				m_Extents.y0 = geoTransform[3];
-				m_Extents.x1 = m_Extents.x0 + mf_PixelSizeX * static_cast<double>(m_SizeX);		// se corner
-				m_Extents.y1 = m_Extents.y0 + mf_PixelSizeY * static_cast<double>(m_SizeY);
-
+			// gdal doc: should not be altered for freed
+			const OGRSpatialReference* pSRS = mp_DS->GetSpatialRef();
+			if (pSRS)
 				m_UtmZone = pSRS->GetUTMZone();
-			}
 		}
 
 		if (loadData == true)
@@ -101,7 +100,7 @@ void RasterFile::Load(const char* fileName, bool loadData)
 
 			//MarkLib::PerfTimer(true);
 
-			mp_Data = (float *)CPLMalloc(sizeof(float)*bandSizeX*bandSizeY);
+			mp_Data = (float*)CPLMalloc(sizeof(float) * bandSizeX * bandSizeY);
 
 			pBand->RasterIO(
 				GF_Read,			// read or write
@@ -148,6 +147,7 @@ void RasterFile::Load(const char* fileName, bool loadData)
 					}
 				}
 			}
+
 			//et = MarkLib::PerfTimer();
 			//Logger::Write(__FUNCTION__, "Calc min/max time = %0.3f", et);
 		}
