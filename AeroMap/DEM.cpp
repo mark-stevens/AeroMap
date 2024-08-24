@@ -263,13 +263,13 @@ void DEM::create_dem(XString input_point_cloud, XString dem_type, std::vector<do
 		//                '-of', 'GTiff',
 		//                kwargs['geotiff_small'], kwargs['geotiff_small_filled']])
 
-		//# Merge filled scaled DEM with unfilled DEM using bilinear interpolation
+		// Merge filled scaled DEM with unfilled DEM using bilinear interpolation
 		//run('gdalbuildvrt -resolution highest -r bilinear "%s" "%s" "%s"' % (merged_vrt_path, geotiff_small_filled_path, geotiff_tmp_path))
+
 		//run('gdal_translate '
 		//    '-co NUM_THREADS={threads} '
 		//    '-co TILED=YES '
 		//    '-co BIGTIFF=IF_SAFER '
-		//    '-co COMPRESS=DEFLATE '
 		//    '--config GDAL_CACHEMAX {max_memory}% '
 		//    '"{merged_vrt}" "{geotiff}"'.format(**kwargs))
 	}
@@ -285,8 +285,6 @@ void DEM::create_dem(XString input_point_cloud, XString dem_type, std::vector<do
 		args.push_back("TILED=YES");
 		args.push_back("-co");
 		args.push_back("BIGTIFF=IF_SAFER");
-		args.push_back("-co");
-		args.push_back("COMPRESS=DEFLATE");
 		args.push_back("--config");
 		args.push_back("GDAL_CACHEMAX");
 		args.push_back("32.0%");				//TODO: get_max_memory()
@@ -297,7 +295,6 @@ void DEM::create_dem(XString input_point_cloud, XString dem_type, std::vector<do
 		//        '-co NUM_THREADS={threads} '
 		//        '-co TILED=YES '
 		//        '-co BIGTIFF=IF_SAFER '
-		//        '-co COMPRESS=DEFLATE '
 		//        '--config GDAL_CACHEMAX {max_memory}% '
 		//        '"{tiles_vrt}" "{geotiff}"'.format(**kwargs))
 	}
@@ -318,15 +315,20 @@ void DEM::create_dem(XString input_point_cloud, XString dem_type, std::vector<do
 	//if os.path.exists(geotiff_tmp_path):
 	{
 		//    if not keep_unfilled_copy:
-	//        os.remove(geotiff_tmp_path)
-	//    else:
-	//        os.replace(geotiff_tmp_path, io.related_file_path(output_path, postfix=".unfilled"))
+		//        os.remove(geotiff_tmp_path)
+		//    else:
+		//        os.replace(geotiff_tmp_path, io.related_file_path(output_path, postfix=".unfilled"))
 	}
 
 	//for cleanup_file in [tiles_vrt_path, tiles_file_list, merged_vrt_path, geotiff_small_path, geotiff_small_filled_path]:
 	//    if os.path.exists(cleanup_file): os.remove(cleanup_file)
-	//for t in tiles:
-	//    if os.path.exists(t['filename']): os.remove(t['filename'])
+
+	// remove intermediate tiles
+	//for (TileType tile : tiles)
+	{
+		//if (QFile::exists(tile.file_name.c_str()))
+			//QFile::remove(tile.file_name.c_str());
+	}
 }
 
 std::vector<double> DEM::get_dem_radius_steps(XString stats_file, int steps, double resolution, double multiplier)

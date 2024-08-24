@@ -5,6 +5,7 @@
 #include "DEM.h"
 #include "Gsd.h"
 #include "LidarModel.h"
+#include "RasterFile.h"
 #include "StageDEM.h"
 
 int StageDEM::Run()
@@ -148,6 +149,8 @@ int StageDEM::Run()
 
 				//if arg.cog:
 				//    convert_to_cogeo(dem_geotiff_path, max_workers=arg.max_concurrency)
+
+				CreateTerrainModel(dem_geotiff_path);
 			}
 		}
 		else
@@ -163,4 +166,31 @@ int StageDEM::Run()
 	BenchmarkStop("Create DTM/DSM");
 
 	return status;
+}
+
+
+void StageDEM::CreateTerrainModel(XString input_geotiff)
+{
+	// Generate an AeroMap terrain model that can be used
+	// for visualization & analysis.
+	//
+
+	if (input_geotiff.EndsWithNoCase(".tif") == false)
+	{
+		assert(false);
+		return;
+	}
+
+	RasterFile* pRaster = new RasterFile(input_geotiff.c_str(), true);
+
+	if (pRaster->GetSizeX() > 0 && pRaster->GetSizeY() > 0)
+	{
+		XString out_file = input_geotiff.Left(input_geotiff.GetLength() - 3);		// delete "tif"
+		out_file += TERRAIN_MODEL_EXT;
+
+		//TODO:
+		//Terrain::Create().. here
+	}
+
+	delete pRaster;
 }

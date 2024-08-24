@@ -14,7 +14,6 @@ public:
 
 	static std::vector<double> get_dem_radius_steps(XString stats_file, int steps, double resolution, double multiplier = 1.0);
     static XString classify(XString lasFile, double scalar, double slope, double threshold, double window);
-
 };
 
 #endif // #ifndef DEM_H
