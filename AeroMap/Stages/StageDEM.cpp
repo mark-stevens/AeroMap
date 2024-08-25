@@ -6,6 +6,7 @@
 #include "Gsd.h"
 #include "LidarModel.h"
 #include "RasterFile.h"
+#include "Terrain.h"
 #include "StageDEM.h"
 
 int StageDEM::Run()
@@ -183,13 +184,45 @@ void StageDEM::CreateTerrainModel(XString input_geotiff)
 
 	RasterFile* pRaster = new RasterFile(input_geotiff.c_str(), true);
 
-	if (pRaster->GetSizeX() > 0 && pRaster->GetSizeY() > 0)
+	int rowCount = pRaster->GetSizeY();
+	int colCount = pRaster->GetSizeX();
+
+	if (rowCount > 0 && colCount > 0)
 	{
 		XString out_file = input_geotiff.Left(input_geotiff.GetLength() - 3);		// delete "tif"
-		out_file += TERRAIN_MODEL_EXT;
+		out_file += Terrain::GetTerrainFileExt();
 
-		//TODO:
-		//Terrain::Create().. here
+		double pitch = pRaster->GetPixelSizeX() * 1E-3;
+
+		bool status = Terrain::Create(out_file.c_str(), rowCount, colCount, pitch);
+		if (status)
+		{
+			Terrain* pTerrain = new Terrain(out_file.c_str());
+			pTerrain->SetProjection(GIS::Projection::UTM);
+			//pTerrain->SetGeoExtents(rectLL.lonW, rectLL.latS, rectLL.lonE, rectLL.latN);
+
+			GetApp()->LogWrite("Generate terrain...");
+			for (int row = 0; row < rowCount; ++row)
+			{
+				for (int col = 0; col < colCount; ++col)
+				{
+					double height = pRaster->GetHeight(row, col);
+					if (height != pRaster->GetNoData())
+					{
+						pTerrain->SetHeight(rowCount - row - 1, col, height);
+					}
+				}
+				GetApp()->LogWrite("Generate terrain: %0.1f%%...", static_cast<double>(row) / static_cast<double>(rowCount - 1) * 100.0);
+			}
+			pTerrain->UpdateHeightRange();
+
+			//GenerateTexture(pTerrain, ms_TextureFileName.c_str());
+			//GenerateLogFile();
+
+			pTerrain->SaveData();
+
+			delete pTerrain;
+		}
 	}
 
 	delete pRaster;

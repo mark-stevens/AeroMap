@@ -31,8 +31,6 @@
 #define ORG_KEY "GorgeGeo"
 #define APP_KEY "AeroMap"
 
-#define TERRAIN_MODEL_EXT "amt"			// AeroMap terrain model file extension
-
 #define PATH_APPDATA_KEY		"AppDataPath"
 #define STARTUP_STATE_KEY		"StartupState"
 #define LAST_FILE_KEY			"LastFile"			// most recently loaded project file

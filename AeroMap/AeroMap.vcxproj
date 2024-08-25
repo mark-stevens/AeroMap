@@ -235,6 +235,7 @@
     <ClCompile Include="Debug\moc_Stage.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="Debug\moc_TerrainWindow.cpp" />
     <ClCompile Include="DEM.cpp" />
     <ClCompile Include="DroneProc.cpp" />
     <ClCompile Include="DroneProcDlg.cpp" />
@@ -387,6 +388,9 @@
     <ClCompile Include="Stages\StageReport.cpp" />
     <ClCompile Include="Stages\StageSFM.cpp" />
     <ClCompile Include="Stages\StageTexture.cpp" />
+    <ClCompile Include="Terrain.cpp" />
+    <ClCompile Include="TerrainGL.cpp" />
+    <ClCompile Include="TerrainWindow.cpp" />
     <ClCompile Include="Tool.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -595,6 +599,14 @@
     <ClInclude Include="Stages\StageReport.h" />
     <ClInclude Include="Stages\StageSFM.h" />
     <ClInclude Include="Stages\StageTexture.h" />
+    <ClInclude Include="Terrain.h" />
+    <ClInclude Include="TerrainGL.h" />
+    <CustomBuild Include="TerrainWindow.h">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o "$(ConfigurationName)\moc_%(Filename).cpp"  -DQT_CORE_LIB -D_CRT_SECURE_NO_WARNINGS -D_WINDOWS -DUNICODE -DWIN32 -DWIN64 -D%(PreprocessorDefinitions)  "-I.\GeneratedFiles" "-I." "-I$(DEV_PATH)\Common" "-I..\Lib\libgeotiff-1.6.0" "-I..\Lib\libgeotiff-1.6.0\libxtiff" "-I..\Lib\LASlib\inc" "-I..\Lib\LASzip\src" "-I..\Lib\gdal-3.2.1\gcore" "-I..\Lib\gdal-3.2.1\port" "-I..\Lib\gdal-3.2.1\ogr" "-I..\Lib\gdal-3.2.1\ogr\vector_frmts" "-I..\Lib\gdal-3.2.1\alg" "-ILib\tiff-4.0.10\libtiff" "-I..\Lib\libpng-1.6.20" "-I..\Lib\zlib" "-I..\Lib\jpeg-9a" "-I..\Lib\glm-0.9.7.2" "-I..\Lib\glew-2.2.0\include" "-I..\Lib\opencv-4.2.0\opencv\include" "-I..\Lib\opencv-4.2.0\opencv\build-vc140" "-I..\Lib\opencv-4.2.0\opencv\modules\core\include" "-I..\Lib\opencv-4.2.0\opencv\modules\calib3d\include" "-I..\Lib\opencv-4.2.0\opencv\modules\dnn\include" "-I..\Lib\opencv-4.2.0\opencv\modules\features2d\include" "-I..\Lib\opencv-4.2.0\opencv\modules\flann\include" "-I..\Lib\opencv-4.2.0\opencv\modules\highgui\include" "-I..\Lib\opencv-4.2.0\opencv\modules\imgcodecs\include" "-I..\Lib\opencv-4.2.0\opencv\modules\imgproc\include" "-I..\Lib\opencv-4.2.0\opencv\modules\objdetect\include" "-I..\Lib\opencv-4.2.0\opencv\modules\ml\include" "-I..\Lib\opencv-4.2.0\opencv\modules\photo\include" "-I..\Lib\opencv-4.2.0\opencv_contrib\modules\xfeatures2d\include" "-I$(QTDIR)\include" "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtWidgets" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtSvg"</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Moc%27ing %(Identity)...</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
+    </CustomBuild>
     <ClInclude Include="Version.h" />
     <CustomBuild Include="ProjectWindow.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
