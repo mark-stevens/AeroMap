@@ -40,7 +40,6 @@ TerrainWindow::TerrainWindow(QWidget* parent, const char* fileName)
 	, mp_actionRenderSkyNone(nullptr)
 	, mp_actionRenderTerrain(nullptr)
 	, mp_actionRenderTileInfo(nullptr)
-	, mp_actionRenderShore(nullptr)
 	, mp_actionClear(nullptr)
 	, m_FillMode(FILL_MODE::Solid)
 	, m_ViewID(View::Top)
@@ -112,7 +111,6 @@ TerrainWindow::~TerrainWindow()
 	delete mp_actionRenderSkyNone; mp_actionRenderSkyNone = nullptr;
 	delete mp_actionRenderTerrain; mp_actionRenderTerrain = nullptr;
 	delete mp_actionRenderTileInfo; mp_actionRenderTileInfo = nullptr;
-	delete mp_actionRenderShore; mp_actionRenderShore = nullptr;
 	delete mp_actionClear; mp_actionClear = nullptr;
 }
 
@@ -1820,7 +1818,6 @@ void TerrainWindow::contextMenuEvent(QContextMenuEvent* event)
 	menu.addAction(mp_actionRenderAxes);
 	menu.addAction(mp_actionRenderDim);
 	menu.addAction(mp_actionRenderLights);
-	menu.addAction(mp_actionRenderShore);
 	QMenu* pMenuSky = menu.addMenu("Render Sky");
 	pMenuSky->addAction(mp_actionRenderSkySphere);
 	pMenuSky->addAction(mp_actionRenderSkyBox);
@@ -2382,11 +2379,6 @@ void TerrainWindow::CreateActions()
 	mp_actionRenderTileInfo->setCheckable(true);
 	connect(mp_actionRenderTileInfo, SIGNAL(triggered()), this, SLOT(OnRenderTileInfo()));
 
-	mp_actionRenderShore = new QAction(QIcon(""), tr("Render Shorelines"), this);
-	mp_actionRenderShore->setStatusTip(tr("Render shorelines / water bodies"));
-	mp_actionRenderShore->setCheckable(true);
-	connect(mp_actionRenderShore, SIGNAL(triggered()), this, SLOT(OnRenderShore()));
-
 	mp_actionClear = new QAction(QIcon(""), tr("Clear"), this);
 	mp_actionClear->setStatusTip(tr("Clear edit artifacts"));
 	connect(mp_actionClear, SIGNAL(triggered()), this, SLOT(OnClear()));
@@ -2725,16 +2717,6 @@ void TerrainWindow::OnRenderLights()
 {
 	if (mp_Terrain)
 		mp_Terrain->SetRenderLights(!mp_Terrain->GetRenderLights());
-	update();
-}
-
-void TerrainWindow::OnRenderShore()
-{
-	// Render shorelines
-
-	if (mp_Terrain)
-		mp_Terrain->SetRenderShore(!mp_Terrain->GetRenderShore());
-
 	update();
 }
 

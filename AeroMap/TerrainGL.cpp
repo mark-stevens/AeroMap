@@ -26,7 +26,6 @@ TerrainGL::TerrainGL(const char* mapFolder)
 	: Terrain(mapFolder)
 	, mb_RenderAxes(true)
 	, mb_RenderLights(false)
-	, mb_RenderShore(false)
 	, mb_RenderTerrain(true)
 	, mb_RenderTileInfo(false)
 	, m_SimTime(0.0)
@@ -149,7 +148,6 @@ void TerrainGL::Render(glm::mat4& matModel, glm::mat4& matView, glm::mat4& matPr
 	RenderAxes();
 	RenderContour();
 	RenderLights();
-	RenderShore();
 	RenderSkirt();
 }
 
@@ -675,42 +673,6 @@ void TerrainGL::RenderLights()
 
 	// draw sphere representing light source
 	m_SphereLight.Render();
-}
-
-void TerrainGL::RenderShore()
-{
-	// Render shorelines.
-	//
-
-	if (mb_RenderShore == false)
-		return;
-	if (mv_ShoreLines.size() == 0)
-		return;
-
-	VertexBufferGL::VertexPC vx;
-	std::vector<VertexBufferGL::VertexPC> vxList;
-
-	GLManager::GetShader("PC")->Activate();
-
-	vx.SetColor(0.9F, 0.9F, 0.5F);
-
-	// render the ordered line strips derived from post-processing
-	for (int i = 0; i < mv_ShoreLines.size(); ++i)
-	{
-		vxList.clear();
-		for (auto pt : mv_ShoreLines[i].pts)
-		{
-			double x, y;
-			RowColToXY(pt.row, pt.col, x, y);
-			double height = GetHeight(pt.row, pt.col) + 4.0;
-
-			vx.SetPos(x, y, height);
-			vxList.push_back(vx);
-		}
-		VertexBufferGL vbAxes;
-		vbAxes.CreatePC(GL_LINE_LOOP, vxList);
-		vbAxes.Render();
-	}
 }
 
 void TerrainGL::RenderSkirt()

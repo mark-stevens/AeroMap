@@ -158,7 +158,6 @@ private:
 	QAction* mp_actionRenderAxes;
 	QAction* mp_actionRenderDim;
 	QAction* mp_actionRenderLights;
-	QAction* mp_actionRenderShore;
 	QAction* mp_actionRenderSkySphere;
 	QAction* mp_actionRenderSkyBox;
 	QAction* mp_actionRenderSkyNone;
@@ -185,7 +184,6 @@ private slots:
 	void OnRenderAxes();
 	void OnRenderDim();
 	void OnRenderLights();
-	void OnRenderShore();
 	void OnRenderSkySphere();
 	void OnRenderSkyBox();
 	void OnRenderSkyNone();

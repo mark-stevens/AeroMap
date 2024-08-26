@@ -53,8 +53,6 @@ public:
 	bool GetRenderAxes() { return mb_RenderAxes; }
 	void SetRenderLights(bool render) { mb_RenderLights = render; }
 	bool GetRenderLights() { return mb_RenderLights; }
-	void SetRenderShore(bool render) { mb_RenderShore = render; }
-	bool GetRenderShore() { return mb_RenderShore; }
 	void SetRenderTerrain(bool render) { mb_RenderTerrain = render; }
 	bool GetRenderTerrain() { return mb_RenderTerrain; }
 	void SetRenderTileInfo(bool render) { mb_RenderTileInfo = render; }
@@ -149,7 +147,6 @@ private:
 
 	bool mb_RenderAxes;
 	bool mb_RenderLights;
-	bool mb_RenderShore;
 	bool mb_RenderTerrain;
 	bool mb_RenderTileInfo;
 
@@ -160,7 +157,6 @@ private:
 	void RenderContour();
 	void RenderLights();
 	void RenderScene(glm::mat4& matModel, glm::mat4& matView, glm::mat4& matProj, vec4& clipPlane);
-	void RenderShore();
 	void RenderSkirt();
 	void RenderTile(TileType* pTile);
 	//void RenderWater(glm::mat4& matModel, glm::mat4& matView, glm::mat4& matProj, Camera& camera, double nearPlane, double farPlane);

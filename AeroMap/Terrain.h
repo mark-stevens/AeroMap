@@ -79,7 +79,6 @@ public:
 	double  GetDepthNormal(double x, double y, VEC3* pNormal = nullptr);			// get elevation, face normal
 	void    SetDepth(int row, int col, double depthMeters);
 	int		FillWater(int row, int col, int elevTolerance);							// flood fill region, setting vx type to water
-	double  DistanceToShore(int row, int col);										// distance to closest shoreline
 
 	void    SetFlags(int row, int col, UInt8 type);
 	UInt8   GetFlags(int row, int col);
@@ -132,13 +131,6 @@ public:
 	const VEC2 GetLakePoint(unsigned int index);
 	std::vector<VEC2> GetLakePoints() const;
 	void ClearLakePoints();
-
-	int ExtractShoreLines();
-	int GetShoreLineCount() const;					// # of shorelines (water bodies are same as shorelines, since all shorelines are closed)
-	int GetShoreLine(int row, int col);				// return index of shoreline containing point
-	std::vector<PointDb> GetShoreLinePoints(int shoreIndex) const;
-	int GetShoreLinePointCount(int shoreIndex) const;
-	double GetMaxDepth(int shoreIndex) const;		// maximum water depth for specified water body, meters
 
 	// measurement
 
@@ -237,27 +229,6 @@ protected:
 	std::vector<double> mv_ContourElev;				// contour elevation levels, 0 = lowest
 	std::vector<std::vector<RectD>> mv_Contour;		// all contour line segments, each "rect" is single line segment, index is level
 
-	// shorelines are closed water body boundaries; it's important to 
-	// note this describes the geology only, it can't differentiate between
-	// connected water bodies such as a river flowing into an ocean
-	// (though it think this is a necessary first step in adding that functionality)
-	struct ShoreLineType
-	{
-		static const int MIN_PTS = 16;
-
-		double maxDepth;				// max depth of enclosed water body
-		std::vector<PointDb> pts;		// ordered list of points defining shoreline
-		std::set<PointDb> ptSet;
-
-		ShoreLineType()
-		{
-			maxDepth = 0.0;
-			pts.clear();
-			ptSet.clear();
-		}
-	};
-	std::vector<ShoreLineType> mv_ShoreLines;
-
 protected:
 
 	TerrainVertexDiskType GetVertex(int row, int col);
@@ -279,8 +250,6 @@ private:
 	void CloseDataFile();
 
 	void SortContours();
-	bool ShoreEval(int row, int col);
-	ShoreLineType ExtractShoreLine(int row, int col);
 
 	inline UInt32 CalcByteOffset(int rowIdx, int colIdx);
 };
