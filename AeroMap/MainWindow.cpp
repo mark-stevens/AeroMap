@@ -27,6 +27,7 @@ MainWindow::MainWindow()
 	: mp_DroneWindow(nullptr)
 	, mp_OrthoWindow(nullptr)
 	, mp_LidarWindow(nullptr)
+	, mp_TerrainWindow(nullptr)
 	, mp_ProjectWindow(nullptr)
 	, mp_OutputWindow(nullptr)
 	, mp_menuSetup(nullptr)
@@ -36,6 +37,7 @@ MainWindow::MainWindow()
 	, mp_toolBarFile(nullptr)
 	, mp_toolBarLidar(nullptr)
 	, mp_toolBarDrone(nullptr)
+	, mp_toolBarTerrain(nullptr)
 	, mp_toolBarOrtho(nullptr)
 	, mp_actionFileNew(nullptr)
 	, mp_actionFileOpen(nullptr)
@@ -65,6 +67,7 @@ MainWindow::MainWindow()
 	//, mp_GeoIndex(nullptr)
 	, mp_cboAttrLidar(nullptr)
 	, mp_cboColorLidar(nullptr)
+	, mp_cboColorTerrain(nullptr)
 	, mb_PaintMask(false)
 {
     mp_mdiArea = new QMdiArea();
@@ -146,13 +149,15 @@ void MainWindow::closeEvent(QCloseEvent* event)
 
 	delete mp_cboAttrLidar;
 	delete mp_cboColorLidar;
+	delete mp_cboColorTerrain;
 	//remove all windows first?
 	//mp_mdiArea->removeSubWindow
 
 	delete mp_DroneWindow;
 	delete mp_OrthoWindow;
 	delete mp_LidarWindow;
-	
+	delete mp_TerrainWindow;
+
 	delete mp_ProjectWindow;
 	delete mp_OutputWindow;
 
@@ -196,6 +201,7 @@ void MainWindow::closeEvent(QCloseEvent* event)
 	//delete mp_toolBarDrone;
 	//delete mp_toolBarOrtho;
 	//delete mp_toolBarLidar
+	//delete mp_toolBarTerrain
 	delete mp_mdiArea;
 	delete mp_windowMapper;
 
@@ -408,10 +414,18 @@ void MainWindow::CreateToolBars()
 	mp_toolBarLidar->addWidget(new QLabel(" Attribute: "));
 	mp_toolBarLidar->addWidget(mp_cboAttrLidar);
 
+	mp_toolBarTerrain = addToolBar(tr("Terrain Tools"));
+	mp_toolBarTerrain->hide();
+	mp_toolBarTerrain->addAction(mp_actionToolNone);
+	mp_toolBarTerrain->addSeparator();
+	mp_toolBarTerrain->addWidget(new QLabel("Color Scale: "));
+	mp_toolBarTerrain->addWidget(mp_cboColorTerrain);
+
 	mp_toolBarFile->show();
 	mp_toolBarDrone->hide();
 	mp_toolBarOrtho->hide();
 	mp_toolBarLidar->hide();
+	mp_toolBarTerrain->hide();
 }
 
 void MainWindow::CreateStatusBar()
@@ -428,10 +442,12 @@ void MainWindow::CreateColorScaleCombo()
 
 	delete mp_cboAttrLidar;
 	delete mp_cboColorLidar;
+	delete mp_cboColorTerrain;
 
 	mp_cboAttrLidar = new QComboBox();
 	mp_cboColorLidar = new QComboBox();
-	
+	mp_cboColorTerrain = new QComboBox();
+
 	// load all defined color scales
 
 	QDir dir(GetApp()->GetAppDataPath().c_str());
@@ -448,6 +464,7 @@ void MainWindow::CreateColorScaleCombo()
 			if (fileName.EndsWithNoCase(ScaleColor::GetDefaultExt()))
 			{
 				mp_cboColorLidar->addItem(fileName.c_str());
+				mp_cboColorTerrain->addItem(fileName.c_str());
 			}
 		}
 	}
@@ -459,6 +476,7 @@ void MainWindow::CreateColorScaleCombo()
 
 	verify_connect(mp_cboColorLidar, SIGNAL(currentIndexChanged(int)), this, SLOT(OnColorIndexChanged(int)));
 	verify_connect(mp_cboAttrLidar, SIGNAL(currentIndexChanged(int)), this, SLOT(OnColorIndexChanged(int)));
+	verify_connect(mp_cboColorTerrain, SIGNAL(currentIndexChanged(int)), this, SLOT(OnColorIndexChanged(int)));
 }
 
 void MainWindow::LoadProject(const char* pathName)
@@ -576,6 +594,12 @@ void MainWindow::CloseChildWindows()
 		delete mp_LidarWindow;
 		mp_LidarWindow = nullptr;
 	}
+	if (mp_TerrainWindow)
+	{
+		mp_mdiArea->removeSubWindow(mp_TerrainWindow);
+		delete mp_TerrainWindow;
+		mp_TerrainWindow = nullptr;
+	}
 }
 
 void MainWindow::UpdateChildWindows()
@@ -586,6 +610,8 @@ void MainWindow::UpdateChildWindows()
 		mp_OrthoWindow->update();
 	if (mp_LidarWindow != nullptr)
 		mp_LidarWindow->update();
+	if (mp_TerrainWindow != nullptr)
+		mp_TerrainWindow->update();
 }
 
 void MainWindow::UpdateMenus()
@@ -914,6 +940,11 @@ void MainWindow::OnColorIndexChanged(int /* index */)
 		XString scale = XString::CombinePath(GetApp()->GetAppDataPath(), XString(mp_cboColorLidar->currentText()));
 		mp_LidarWindow->SetColorScale(attr, scale.c_str());
 	}
+	else if (mp_TerrainWindow)
+	{
+		XString scale = XString::CombinePath(GetApp()->GetAppDataPath(), XString(mp_cboColorTerrain->currentText()));
+		mp_TerrainWindow->SetColorScale(scale.c_str());
+	}
 
 	// remember most recent selection
 	QSettings settings(ORG_KEY, APP_KEY);
@@ -942,6 +973,7 @@ void MainWindow::OnViewChanged(AeroMap::ViewType view, int subItem)
 	mp_toolBarDrone->hide();
 	mp_toolBarOrtho->hide();
 	mp_toolBarLidar->hide();
+	mp_toolBarTerrain->hide();
 
 	switch (view)
 	{
@@ -965,6 +997,19 @@ void MainWindow::OnViewChanged(AeroMap::ViewType view, int subItem)
 
 			mp_OrthoWindow->showMaximized();
 			mp_toolBarOrtho->show();
+		}
+		break;
+	case AeroMap::ViewType::Terrain:
+		{
+			assert(mp_TerrainWindow == nullptr);
+
+			//TODO:
+			//need to differentiate dtm/dsm
+			mp_TerrainWindow = new TerrainWindow(this, tree.dem_dtm.c_str());
+			mp_mdiArea->addSubWindow(mp_TerrainWindow);
+
+			mp_TerrainWindow->showMaximized();
+			mp_toolBarTerrain->show();
 		}
 		break;
 	case AeroMap::ViewType::Lidar:

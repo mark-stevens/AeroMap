@@ -151,7 +151,7 @@ int StageDEM::Run()
 				//if arg.cog:
 				//    convert_to_cogeo(dem_geotiff_path, max_workers=arg.max_concurrency)
 
-				CreateTerrainModel(dem_geotiff_path);
+				CreateTerrainModel(dem_geotiff_path, product);
 			}
 		}
 		else
@@ -170,7 +170,7 @@ int StageDEM::Run()
 }
 
 
-void StageDEM::CreateTerrainModel(XString input_geotiff)
+void StageDEM::CreateTerrainModel(XString input_geotiff, XString dem_type)
 {
 	// Generate an AeroMap terrain model that can be used
 	// for visualization & analysis.
@@ -181,20 +181,36 @@ void StageDEM::CreateTerrainModel(XString input_geotiff)
 		assert(false);
 		return;
 	}
+	if ((dem_type.Compare("dtm") == false) && (dem_type.Compare("dsm") == false))
+	{
+		assert(false);
+		return;
+	}
 
 	RasterFile* pRaster = new RasterFile(input_geotiff.c_str(), true);
 
 	int rowCount = pRaster->GetSizeY();
 	int colCount = pRaster->GetSizeX();
 
-	if (rowCount > 0 && colCount > 0)
+	if ((rowCount > 0) && (colCount > 0))
 	{
-		XString out_file = input_geotiff.Left(input_geotiff.GetLength() - 3);		// delete "tif"
-		out_file += Terrain::GetTerrainFileExt();
+		//TODO:
+		//scale decimation based on output size (not same value as arg.decimation)
+		int decimate = 100;
 
-		double pitch = pRaster->GetPixelSizeX() * 1E-3;
+		XString out_file;
+		if (dem_type == "dtm")
+			out_file = tree.dem_dtm;
+		else if (dem_type == "dsm")
+			out_file = tree.dem_dsm;
 
-		bool status = Terrain::Create(out_file.c_str(), rowCount, colCount, pitch);
+		double pitch = pRaster->GetPixelSizeX();
+		pitch = 10.0;
+
+		int out_rows = rowCount / decimate;
+		int out_cols = colCount / decimate;
+
+		bool status = Terrain::Create(out_file.c_str(), out_rows, out_cols, pitch);
 		if (status)
 		{
 			Terrain* pTerrain = new Terrain(out_file.c_str());
@@ -202,26 +218,26 @@ void StageDEM::CreateTerrainModel(XString input_geotiff)
 			//pTerrain->SetGeoExtents(rectLL.lonW, rectLL.latS, rectLL.lonE, rectLL.latN);
 
 			GetApp()->LogWrite("Generate terrain...");
-			for (int row = 0; row < rowCount; ++row)
+			int dst_row = 0;
+			for (int row = 0; row < rowCount; row += decimate)
 			{
-				for (int col = 0; col < colCount; ++col)
+				int dst_col = 0;
+				for (int col = 0; col < colCount; col += decimate)
 				{
 					double height = pRaster->GetHeight(row, col);
 					if (height != pRaster->GetNoData())
-					{
-						pTerrain->SetHeight(rowCount - row - 1, col, height);
-					}
+						pTerrain->SetHeight(out_rows - dst_row - 1, dst_col, height);
+					++dst_col;
 				}
-				GetApp()->LogWrite("Generate terrain: %0.1f%%...", static_cast<double>(row) / static_cast<double>(rowCount - 1) * 100.0);
+				++dst_row;
 			}
+
 			pTerrain->UpdateHeightRange();
-
-			//GenerateTexture(pTerrain, ms_TextureFileName.c_str());
-			//GenerateLogFile();
-
 			pTerrain->SaveData();
 
 			delete pTerrain;
+
+			GetApp()->LogWrite("Terrain generated");
 		}
 	}
 

@@ -22,6 +22,7 @@
 #include "TextFile.h"		// manage small text files
 #include "Logger.h"
 #include "RasterFile.h"
+#include "Terrain.h"
 #include "Project.h"
 
 #define DEFAULT_EXT "aero"
@@ -816,6 +817,8 @@ void Project::InitTree()
 	tree.odm_dem = XString::CombinePath(ms_DroneOutputPath, "odm_dem");
 	tree.odm_dem_dtm = XString::CombinePath(tree.odm_dem, "dtm.tif");
 	tree.odm_dem_dsm = XString::CombinePath(tree.odm_dem, "dsm.tif");
+	tree.dem_dtm = XString::CombinePath(tree.odm_dem, XString::Format("dtm.%s", Terrain::GetTerrainFileExt()));
+	tree.dem_dsm = XString::CombinePath(tree.odm_dem, XString::Format("dsm.%s", Terrain::GetTerrainFileExt()));
 
 	tree.odm_orthophoto = XString::CombinePath(ms_DroneOutputPath, "odm_orthophoto");
 	tree.odm_orthophoto_tif = XString::CombinePath(tree.odm_orthophoto, "odm_orthophoto.tif");

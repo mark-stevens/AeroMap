@@ -125,17 +125,21 @@ void ProjectWindow::UpdateUI()
 	pItem->setToolTip(0, str.c_str());
 	mp_ItemDroneOutput->addChild(pItem);
 
-	//TODO:
-	// need support for viewing/analysing these
-	//str = XString::Format("DTM: %s", QFile::exists(tree.odm_dem_dtm.c_str()) ? tree.odm_dem_dtm.c_str() : "---");
-	//pItem = new QTreeWidgetItem(QStringList(str.c_str()), static_cast<int>(ItemType::DroneOutputDTM));
-	//pItem->setToolTip(0, str.c_str());
-	//mp_ItemDroneOutput->addChild(pItem);
+	if (QFile::exists(tree.dem_dtm.c_str()))
+	{
+		str = XString::Format("DTM: %s", QFile::exists(tree.dem_dtm.c_str()) ? tree.odm_dem_dtm.c_str() : "---");
+		pItem = new QTreeWidgetItem(QStringList(str.c_str()), static_cast<int>(ItemType::DroneOutputDTM));
+		pItem->setToolTip(0, str.c_str());
+		mp_ItemDroneOutput->addChild(pItem);
+	}
 
-	//str = XString::Format("DSM: %s", QFile::exists(tree.odm_dem_dsm.c_str()) ? tree.odm_dem_dsm.c_str() : "---");
-	//pItem = new QTreeWidgetItem(QStringList(str.c_str()), static_cast<int>(ItemType::DroneOutputDSM));
-	//pItem->setToolTip(0, str.c_str());
-	//mp_ItemDroneOutput->addChild(pItem);
+	if (QFile::exists(tree.dem_dsm.c_str()))
+	{
+		str = XString::Format("DSM: %s", QFile::exists(tree.dem_dsm.c_str()) ? tree.dem_dsm.c_str() : "---");
+		pItem = new QTreeWidgetItem(QStringList(str.c_str()), static_cast<int>(ItemType::DroneOutputDSM));
+		pItem->setToolTip(0, str.c_str());
+		mp_ItemDroneOutput->addChild(pItem);
+	}
 
 	// lidar items
 
@@ -157,6 +161,7 @@ void ProjectWindow::UpdateUI()
 	if (settings.value(LIDAR_NODE_KEY, false).toBool())
 		mp_ItemLidarRoot->setExpanded(true);
 
+	mp_ItemDroneOutput->setExpanded(true);
 	mp_ItemRoot->setExpanded(true);
 }
 
@@ -227,6 +232,14 @@ void ProjectWindow::OnItemDoubleClicked(QTreeWidgetItem* pItem, int column)
 		{
 			GetApp()->ActivateView(AeroMap::ViewType::DroneOrtho);
 		}
+		else if (itemType == ItemType::DroneOutputDTM)
+		{
+			GetApp()->ActivateView(AeroMap::ViewType::Terrain);
+		}
+		else if (itemType == ItemType::DroneOutputDSM)
+		{
+			GetApp()->ActivateView(AeroMap::ViewType::Terrain);
+		}
 	}
 	else if (pItem->parent() == mp_ItemLidarRoot)
 	{
@@ -235,8 +248,6 @@ void ProjectWindow::OnItemDoubleClicked(QTreeWidgetItem* pItem, int column)
 		if (GetProject().GetLidarExists(index))
 			GetApp()->ActivateView(AeroMap::ViewType::Lidar, index);
 	}
-
-	DisplayProperties(pItem);
 }
 
 void ProjectWindow::OnActivateView()
@@ -258,6 +269,9 @@ void ProjectWindow::DisplayProperties(QTreeWidgetItem* pItem)
 	case ItemType::DroneInput:
 		break;
 	case ItemType::DroneOutput:
+		break;
+	case ItemType::DroneOutputDTM:
+		DisplayTerrainProperties(pItem);
 		break;
 	case ItemType::LidarFile:
 		DisplayLidarProperties(pItem);
@@ -337,6 +351,25 @@ void ProjectWindow::DisplayLidarProperties(QTreeWidgetItem* pItem)
 	dlg.exec();
 }
 
+void ProjectWindow::DisplayTerrainProperties(QTreeWidgetItem* pItem)
+{
+	MetaDataDlg dlg(this, "Terrain Properties");
+
+	XString file_name;
+	ItemType itemType = static_cast<ItemType>(pItem->type());
+	if (itemType == ItemType::DroneOutputDTM)
+		file_name = tree.dem_dtm;
+	else
+		file_name = tree.dem_dsm;
+
+	Terrain* pTerrain = new Terrain(file_name.c_str());
+	XString meta = pTerrain->GetMetaData();
+	delete pTerrain;
+
+	dlg.SetMetaData(meta);
+	dlg.exec();
+}
+
 void ProjectWindow::SaveState()
 {
 	// persist top-level node states
@@ -372,6 +405,10 @@ void ProjectWindow::contextMenuEvent(QContextMenuEvent* event)
 		menu.addAction(mp_actionOpenFolder);
 		menu.addAction(mp_actionProperties);
 	case ItemType::DroneOutput:
+		menu.addAction(mp_actionOpenFolder);
+		menu.addAction(mp_actionProperties);
+		break;
+	case ItemType::DroneOutputDTM:
 		menu.addAction(mp_actionOpenFolder);
 		menu.addAction(mp_actionProperties);
 		break;

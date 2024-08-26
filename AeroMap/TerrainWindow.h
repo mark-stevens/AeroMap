@@ -7,6 +7,7 @@
 #include "TerrainGL.h"			// backing terrain
 #include "VertexBufferGL.h"
 #include "Tool.h"				// tool manager
+#include "ScaleColor.h"
 #include "ProfileWindow.h"
 
 #include <QOpenGLWidget>
@@ -23,20 +24,21 @@ class TerrainWindow : public QOpenGLWidget
 
 public:
 	
-	TerrainWindow(QWidget* parent, const char* mapFolder = nullptr);
+	TerrainWindow(QWidget* parent, const char* fileName = nullptr);
 	~TerrainWindow();
-
-	QString GetCurrentFile();
 
 	bool Save();
 	bool ConfirmClose();
 	QString UserFriendlyCurrentFile();
-	QString CurrentFile() { return ms_MapFolder.c_str(); }
+	QString CurrentFile() { return ms_FileName.c_str(); }
+	QString GetCurrentFile();		// need both?
 
 	void ResetView();
 
 	void Contour();
 	void OnElevation();
+
+	void SetColorScale(const char* scaleFile);
 
 	void SetWaterMode(TerrainGL::WaterMode mode);
 	TerrainGL::WaterMode GetWaterMode();
@@ -87,7 +89,7 @@ private:
 	};
 	std::vector<TextType> mv_Text;
 
-	XString		ms_MapFolder;		// location of terrain model
+	XString		ms_FileName;		// full file/path of terrain model
 	TerrainGL*	mp_Terrain;			// backing terrain being rendered/edited
 	View		m_ViewID;			// "this" view's ID
 
@@ -100,6 +102,8 @@ private:
 	ShaderGL m_shaderPC;			// shader program for PC type vertices
 	ShaderGL m_shaderPCT;			// shader program for PCT type vertices
 	ShaderGL m_shaderSS;			// screen space shader
+
+	ScaleColor* mp_ScaleColor;
 
 	double mf_Height;				// dimensions of ortho view windows, world units
 	double mf_Width;

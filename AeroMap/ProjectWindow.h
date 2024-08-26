@@ -89,6 +89,7 @@ private:
 	void CreateActions();
 	void DisplayProperties(QTreeWidgetItem* pItem);
 	void DisplayLidarProperties(QTreeWidgetItem* pItem);
+	void DisplayTerrainProperties(QTreeWidgetItem* pItem);
 	XString SelectFolder();
 	void UpdateUI();
 };

@@ -73,6 +73,7 @@ public:
 		Drone,			// drone photogrammetry workspace
 		DroneOrtho,		// orthophoto window
 		Lidar,			// lidar window
+		Terrain			// terrain model window
 	};
 
 	Tool m_Tool;		// active tool

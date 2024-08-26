@@ -64,32 +64,34 @@ struct TreeType
 	XString openmvs;
 	XString openmvs_model;
 
-	XString odm_filterpoints;
+	XString odm_filterpoints;				// root output filter path
 	XString filtered_point_cloud;
 	XString filtered_point_cloud_stats;
 
-	XString odm_meshing;
+	XString odm_meshing;					// root output mesh path
 	XString odm_mesh;
 	XString odm_25dmesh;
 
-	XString odm_georef_path;
+	XString odm_georef_path;				// root output georef path
 	XString odm_georeferencing_model_laz;
 
-	XString odm_dem;
-	XString odm_dem_dtm;
+	XString odm_dem;						// root output dem path
+	XString odm_dem_dtm;					// .tif files
 	XString odm_dem_dsm;
+	XString dem_dtm;						// terrain model files
+	XString dem_dsm;
 
-	XString odm_texturing;
+	XString odm_texturing;					// root output texture path
 	XString odm_25dtexturing;
 	XString odm_textured_model_obj;
 
-	XString odm_orthophoto;
+	XString odm_orthophoto;					// root output orthophoto path
 	XString odm_orthophoto_tif;
 	XString odm_orthophoto_corners;
 	XString odm_orthophoto_log;
 	XString odm_orthophoto_render;
 
-	XString odm_report;
+	XString odm_report;						// root output report path
 
 	// executables
 	

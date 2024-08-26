@@ -16,6 +16,7 @@ const float WATER_COLOR_R = 0.05F;
 const float WATER_COLOR_G = 0.05F;
 const float WATER_COLOR_B = 0.36F;
 
+#include "PngFile.h"
 #include "ShaderLib.h"
 #include "TerrainGL.h"
 
@@ -910,6 +911,24 @@ void TerrainGL::LoadTerrain()
 
 	// Load texture file
 
+//TODO:
+	//create temp texture file that can be modified when color scale changes
+	ms_TextureFile = ms_FileName + ".png";
+	PngFile pngFile;
+	if (pngFile.Create(GetColCount(), GetRowCount(), 4))
+	{
+		for (int row = 0; row < GetRowCount(); ++row)
+		{
+			for (int col = 0; col < GetColCount(); ++col)
+			{
+				PixelType pix;
+
+				//pngFile.SetPixel(col, row, pix);
+			}
+		}
+		//int code = pngFile.Save(ms_TextureFile.c_str());
+	}
+
 	if (!m_texTerrain.Load(ms_TextureFile.c_str()))
 	{
 		Logger::Write(__FUNCTION__, "Unable to load texture: '%s'", ms_TextureFile.c_str());
@@ -917,7 +936,7 @@ void TerrainGL::LoadTerrain()
 
 	// load skirt
 
-	LoadSkirt();
+	//LoadSkirt();
 }
 
 void TerrainGL::LoadTile(TileType* pTile, UInt32 tileRow, UInt32 tileCol)

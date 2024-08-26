@@ -11,6 +11,7 @@
 #include "DroneWindow.h"		// Geodata workspace
 #include "OrthoWindow.h"		// Orthophoto window
 #include "LidarWindow.h"		// Lidar workspace
+#include "TerrainWindow.h"		// Terrain model view
 
 #include <QComboBox>
 #include <QMdiArea>
@@ -120,7 +121,8 @@ private:
 	DroneWindow* mp_DroneWindow;		// drone photogrammetry workspace
 	OrthoWindow* mp_OrthoWindow;		// orthophoto viewer
 	LidarWindow* mp_LidarWindow;		// lidar workspace
-		
+	TerrainWindow* mp_TerrainWindow;	// terrain model viewer
+
 	ProjectWindow* mp_ProjectWindow;
 	OutputWindow* mp_OutputWindow;
 
@@ -137,7 +139,8 @@ private:
 	QToolBar* mp_toolBarDrone;			// drone workspace toolbar
 	QToolBar* mp_toolBarOrtho;			// orthophoto toolbar
 	QToolBar* mp_toolBarLidar;			// lidar workspace toolbar
-	
+	QToolBar* mp_toolBarTerrain;
+
 	QAction* mp_actionFileNew;
 	QAction* mp_actionFileOpen;
 	QAction* mp_actionFileSave;
@@ -177,6 +180,8 @@ private:
 
 	QComboBox* mp_cboAttrLidar;		// property used for color (return #, z value, etc.)
 	QComboBox* mp_cboColorLidar;	// color scale combo box, lidar
+	QComboBox* mp_cboColorTerrain;	// color scale combo box, terrain
+
 	enum { MAX_RECENT_FILES = 4 };
     QAction* mp_recentFileActs[MAX_RECENT_FILES];
 };

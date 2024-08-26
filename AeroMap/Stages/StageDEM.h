@@ -11,7 +11,7 @@ public:
 
 private:
 
-	void CreateTerrainModel(XString input_geotiff);
+	void CreateTerrainModel(XString input_geotiff, XString dem_type);
 };
 
 #endif // #ifndef STAGEDEM_H

@@ -20,7 +20,7 @@
 #include <QProgressDialog>
 #include <QStatusBar>
 
-TerrainWindow::TerrainWindow(QWidget* parent, const char* mapFolder)
+TerrainWindow::TerrainWindow(QWidget* parent, const char* fileName)
 	: QOpenGLWidget(parent, Qt::CustomizeWindowHint)
 	, mp_Terrain(nullptr)
 	, mb_RenderDim(false)
@@ -47,6 +47,7 @@ TerrainWindow::TerrainWindow(QWidget* parent, const char* mapFolder)
 	, mb_View(true)
 	, mp_ProfileWindow(nullptr)
 	, m_FrameBuffer(-1)
+	, mp_ScaleColor(nullptr)
 {
 	setAttribute(Qt::WA_DeleteOnClose);
 	setMinimumSize(640, 480);
@@ -54,6 +55,10 @@ TerrainWindow::TerrainWindow(QWidget* parent, const char* mapFolder)
 
 	mp_Parent = static_cast<MainWindow*>(parent);
 	assert(mp_Parent != nullptr);
+
+	if (fileName)
+		ms_FileName = fileName;
+	ms_FileName.Trim();
 
 	mf_Width = 1000.0;
 	mf_Height = 1000.0;
@@ -79,15 +84,7 @@ TerrainWindow::TerrainWindow(QWidget* parent, const char* mapFolder)
 	
 	CreateActions();
 
-	if (mapFolder != nullptr)
-		ms_MapFolder = mapFolder;
-
-	// accept either terrain_folder/ or terrain_folder/terrain.dat,
-	// but use only terrain_folder/
-	if (ms_MapFolder.EndsWithNoCase("terrain.dat"))
-		ms_MapFolder.DeleteRight(12);
-
-	SetCurrentFile(mapFolder);
+	SetCurrentFile(fileName);
 }
 
 TerrainWindow::~TerrainWindow()
@@ -95,6 +92,8 @@ TerrainWindow::~TerrainWindow()
 	// clean up opengl state, other gl windows will
 	// re-inititialize it
 	GLManager::Shutdown();
+
+	delete mp_ScaleColor;
 
 	//delete mp_ProfileWindow;
 
@@ -153,9 +152,9 @@ void TerrainWindow::paintGL()
 
 	if (mp_Terrain == nullptr)
 	{
-		if (ms_MapFolder.GetLength() > 0)
+		if (ms_FileName.GetLength() > 0)
 		{
-			mp_Terrain = new TerrainGL(ms_MapFolder.c_str());
+			mp_Terrain = new TerrainGL(ms_FileName.c_str());
 			// keep a singleton ptr to the base class for application-wide access
 			//GetApp()->SetTerrain(dynamic_cast<Terrain*>(mp_Terrain));
 			OnViewTop();
@@ -1456,7 +1455,7 @@ void TerrainWindow::keyPressEvent(QKeyEvent* event)
 	//
 
 	// make move deltas relative to size of terrain
-	double delta = mp_Terrain->GetRadius() * 0.01;
+	double delta = std::max(10.0, mp_Terrain->GetRadius() * 0.01);
 
 	switch (event->key()) {
 	case Qt::Key_H:
@@ -1773,7 +1772,7 @@ bool TerrainWindow::Save()
 
 QString TerrainWindow::UserFriendlyCurrentFile()
 {
-	return StrippedName(ms_MapFolder.c_str());
+	return StrippedName(ms_FileName.c_str());
 }
 
 void TerrainWindow::closeEvent(QCloseEvent* event)
@@ -1875,7 +1874,7 @@ void TerrainWindow::SetCurrentFile(const QString& fileName)
 
 QString TerrainWindow::GetCurrentFile()
 {
-	return ms_MapFolder.c_str();
+	return ms_FileName.c_str();
 }
 
 QString TerrainWindow::StrippedName(const QString &fullFileName)
@@ -2825,3 +2824,47 @@ TerrainGL::WaterMode TerrainWindow::GetWaterMode()
 
 	return TerrainGL::WaterMode::Surface;
 }
+
+void TerrainWindow::SetColorScale(const char* scaleFile)
+{
+	// Set the active color scale.
+	//
+	// Inputs:
+	//		scaleFile = color scale to use
+	//
+
+	assert(scaleFile != nullptr);
+
+	if (QFile::exists(scaleFile) == false)
+		return;
+
+	delete mp_ScaleColor;
+	mp_ScaleColor = new ScaleColor(scaleFile);
+
+	//TODO:
+	// dumb way to do this, just want to get something rendering 
+	if (mp_ScaleColor->GetBandCount() > 0)
+	{
+		for (int x = 0; x < mp_Terrain->GetColCount(); ++x)
+		{
+			for (int y = 0; y < mp_Terrain->GetRowCount(); ++y)
+			{
+				double hf = mp_Terrain->GetHeight(y, x) / mp_Terrain->GetMaxElev();;
+				PixelType pix = mp_ScaleColor->GetColorByHeight(hf);
+				mp_Terrain->SetPixel(x, mp_Terrain->GetRowCount() - y - 1, pix);
+			}
+		}
+		mp_Terrain->Save();
+
+		// complete rebuild excessive because it recreates all vertex buffers
+		// (only need texture)
+		mp_Terrain->Rebuild();
+	}
+
+	// save the selection
+	//QSettings settings(ORG_KEY, APP_KEY);
+	//settings.setValue(LAST_TERRAIN_SCALE_FILE_KEY, scaleFile);
+
+	update();
+}
+
