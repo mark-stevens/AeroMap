@@ -18,11 +18,14 @@ public:
 
 	enum class Flags : UInt8
 	{
-		WATER = 0x01,        // if set, depth value valid, else land vertex
-		SAND  = 0x02,        // or-able land flags
-		DIRT  = 0x04,
-		ROCK  = 0x08,
-		SHORE = 0x10,
+		WATER  = 0x01,        // if set, depth value valid, else land vertex
+		SAND   = 0x02,        // or-able land flags
+		DIRT   = 0x04,
+		ROCK   = 0x08,
+		SHORE  = 0x10,
+		RES1   = 0x20,
+		RES2   = 0x40,
+		NODATA = 0x80			// "no data" marker
 	};
 
 	// database point type
