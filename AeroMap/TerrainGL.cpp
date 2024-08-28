@@ -919,8 +919,8 @@ void TerrainGL::LoadTile(TileType* pTile, UInt32 tileRow, UInt32 tileCol)
 	RowColToXY(swRow + TILE_SIZE, swCol + TILE_SIZE, neX, neY);
 
 	TerrainVertexDiskType vxDesc = GetVertex(swRow, swCol);
-	pTile->minExt = VEC3(swX, swY, FeetToMeters(vxDesc.Height));
-	pTile->maxExt = VEC3(neX, neY, FeetToMeters(vxDesc.Height));
+	pTile->minExt = VEC3(swX, swY, vxDesc.Height);
+	pTile->maxExt = VEC3(neX, neY, vxDesc.Height);
 
 	std::vector<VertexBufferGL::VertexPNTF> vxList;
 	vxList.reserve(VERTEX_COUNT);
@@ -943,7 +943,7 @@ void TerrainGL::LoadTile(TileType* pTile, UInt32 tileRow, UInt32 tileCol)
 			VertexBufferGL::VertexPNTF vx;
 			vx.x = static_cast<float>(trnCol * GetPitch());
 			vx.y = static_cast<float>(trnRow * GetPitch());
-			vx.z = static_cast<float>(FeetToMeters(vxDesc.Height-vxDesc.Depth));	// subtract water, if any
+			vx.z = static_cast<float>(vxDesc.Height-vxDesc.Depth);	// subtract water, if any
 			vx.nx = static_cast<float>(N.x);
 			vx.ny = static_cast<float>(N.y);
 			vx.nz = static_cast<float>(N.z);
@@ -959,7 +959,7 @@ void TerrainGL::LoadTile(TileType* pTile, UInt32 tileRow, UInt32 tileCol)
 
 			// get presumed single elevation for water
 			if ((vxDesc.Flags & (UInt8)Flags::WATER) > 0)
-				mf_WaterElev = FeetToMeters(vxDesc.Height);
+				mf_WaterElev = vxDesc.Height;
 
 			if (r < TILE_SIZE && c < TILE_SIZE)
 			{
