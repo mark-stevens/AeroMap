@@ -98,8 +98,6 @@ struct TreeType
 	XString prog_opensfm;
 	XString prog_densify;
 	XString prog_pdal;
-	XString prog_gdal_buildvrt;
-	XString prog_gdal_translate;
 	XString prog_orthophoto;
 	XString prog_recon_tex;
 	XString prog_recon_mesh;
@@ -107,6 +105,9 @@ struct TreeType
 	XString prog_dem2points;
 	XString prog_dem2mesh;
 	XString prog_filter;
+	XString prog_gdal_buildvrt;
+	XString prog_gdal_translate;
+	XString prog_gdal_warp;
 };
 extern TreeType tree;
 

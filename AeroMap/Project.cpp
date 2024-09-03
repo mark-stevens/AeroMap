@@ -847,4 +847,5 @@ void Project::InitTree()
 
 	tree.prog_gdal_buildvrt = XString::CombinePath(lib_path, "venv/Lib/site-packages/osgeo/gdalbuildvrt.exe");
 	tree.prog_gdal_translate = XString::CombinePath(lib_path, "venv/Lib/site-packages/osgeo/gdal_translate.exe");
+	tree.prog_gdal_warp = XString::CombinePath(lib_path, "venv/Lib/site-packages/osgeo/gdalwarp.exe");
 }

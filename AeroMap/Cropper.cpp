@@ -49,8 +49,8 @@ XString Cropper::crop(XString gpkg_path, XString geotiff_path, /*gdal_options,*/
 		ext = filename.Mid(pos);
 	}
 
-	//XString original_geotiff = XString::CombinePath(path, XString::Format("%s.original%s", basename.c_str(), ext.c_str()));
-	//AeroLib::Replace(geotiff_path, original_geotiff);
+	XString original_geotiff = XString::CombinePath(path, XString::Format("%s.original%s", basename.c_str(), ext.c_str()));
+	AeroLib::Replace(geotiff_path, original_geotiff);
 
 	//try:
 	//    kwargs = {
@@ -66,10 +66,21 @@ XString Cropper::crop(XString gpkg_path, XString geotiff_path, /*gdal_options,*/
 	args.push_back("-cutline");
 	args.push_back(gpkg_path.c_str());
 	args.push_back("-crop_to_cutline");
-	args.push_back("");
-	args.push_back("");
-	args.push_back("");
-
+	args.push_back("-co");
+	args.push_back("TILED=YES");
+	args.push_back("-co");
+	args.push_back("COMPRESS=DEFLATE");
+	args.push_back("-co");
+	args.push_back("BLOCKXSIZE=512");
+	args.push_back("-co");
+	args.push_back("BLOCKYSIZE=512");
+	args.push_back("-co");
+	args.push_back("BIGTIFF=IF_SAFER");
+	args.push_back("-co");
+	args.push_back(XString::Format("NUM_THREADS=%d", arg.max_concurrency).c_str());
+	args.push_back(original_geotiff.c_str());				// geotiff input
+	args.push_back(geotiff_path.c_str());					// geotiff output
+	AeroLib::RunProgramEnv(tree.prog_gdal_warp, args);		
 	// cmd: gdalwarp 
 	//			-cutline "d:\test_odm\odm_georeferencing\odm_georeferenced_model.bounds.gpkg" 
 	//			-crop_to_cutline 
@@ -84,7 +95,9 @@ XString Cropper::crop(XString gpkg_path, XString geotiff_path, /*gdal_options,*/
 	//        '{geotiffInput} '
 	//        '{geotiffOutput} '
 	//        '--config GDAL_CACHEMAX {max_memory}%'.format(**kwargs))
-	//
+
+	assert(QFile::exists(geotiff_path.c_str()));
+
 	//    if not keep_original:
 	//        os.remove(original_geotiff)
 
@@ -106,20 +119,20 @@ XString Cropper::create_bounds_geojson(XString pointcloud_path, double buffer_di
 	//		return = filename to GeoJSON containing the polygon
 	//
 
-	//    if not os.path.exists(pointcloud_path):
+	if (QFile::exists(pointcloud_path.c_str()) == false)
 	{
-		//        log.ODM_WARNING('Point cloud does not exist, cannot generate bounds {}'.format(pointcloud_path))
-		//        return ''
+		Logger::Write(__FUNCTION__, "Point cloud does not exist, cannot generate bounds: '%s'", pointcloud_path.c_str());
+		return "";
 	}
 
-	//    # Do decimation prior to extracting boundary information
-	//    decimated_pointcloud_path = self.path('decimated.las')
-	//
+	// Do decimation prior to extracting boundary information
+	XString decimated_pointcloud_path = path("decimated.las");
+	
 	//    run("pdal translate -i \"{}\" "
 	//        "-o \"{}\" "
 	//        "decimation "
 	//        "--filters.decimation.step={} ".format(pointcloud_path, decimated_pointcloud_path, decimation_step))
-	//
+	
 	//    if not os.path.exists(decimated_pointcloud_path):
 	{
 		//        log.ODM_WARNING('Could not decimate point cloud, thus cannot generate GPKG bounds {}'.format(decimated_pointcloud_path))
@@ -181,27 +194,27 @@ XString Cropper::create_bounds_geojson(XString pointcloud_path, double buffer_di
 	//        else:
 	//            log.ODM_WARNING("Very small crop area detected, we will not smooth it.")
 	//
-	//    # Save to a new file
-	XString bounds_geojson_path;// = self.path('bounds.geojson')
+	// Save to a new file
+	XString bounds_geojson_path = path("bounds.geojson");
 	//    if os.path.exists(bounds_geojson_path):
 	//        os.remove(bounds_geojson_path)
-	//
+	
 	//    out_ds = driver.CreateDataSource(bounds_geojson_path)
 	//    layer = out_ds.CreateLayer("convexhull", geom_type=ogr.wkbPolygon)
-	//
+	
 	//    feature_def = layer.GetLayerDefn()
 	//    feature = ogr.Feature(feature_def)
 	//    feature.SetGeometry(convexhull)
 	//    layer.CreateFeature(feature)
 	//    feature = None
-	//
+	
 	//    # Save and close data sources
 	//    out_ds = ds = None
-	//
+	
 	//    # Remove decimated point cloud
 	//    if os.path.exists(decimated_pointcloud_path):
 	//        os.remove(decimated_pointcloud_path)
-	//
+	
 	//    # Remove tmp bounds
 	//    if os.path.exists(tmp_bounds_geojson_path):
 	//        os.remove(tmp_bounds_geojson_path)
@@ -300,4 +313,3 @@ XString Cropper::create_bounds_gpkg(XString pointcloud_path, double buffer_dista
 //
 //    # Save and close output data source
 //    out_ds = None
-
