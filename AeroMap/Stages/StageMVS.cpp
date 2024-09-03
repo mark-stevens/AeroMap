@@ -34,7 +34,7 @@ int StageMVS::Run()
         XString openmvs_scene_file = XString::CombinePath(tree.openmvs, "scene.mvs");
         if ((QFile::exists(openmvs_scene_file.c_str()) == false) || Rerun())
         {
-            GetApp()->LogWrite("OpenMVS: Importing scene from OpenMVS...");
+            GetApp()->LogWrite("OpenMVS: Importing scene from OpenSFM...");
             QStringList args;
             args.push_back("export_openmvs");
             args.push_back(tree.opensfm.c_str());
