@@ -29,8 +29,6 @@ public:
 
 		Excavate,		// level a rectangular region
 		Router,			// cut path with router
-		Lake,			// create a lake
-		Ocean,
 		WaterFill,		// flood fill region with water-type vertices
 		TexPaint,		// paint with texture
 

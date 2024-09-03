@@ -7,8 +7,6 @@
 
 #include "ContourDlg.h"			// contouring options dialog
 #include "ElevationDlg.h"		// Change terrain elevation globally
-//#include "LakeDlg.h"			// lake creation options dialog
-//#include "WaterDlg.h"			// fill region with water
 
 #include "RasterFile.h"
 #include "ShaderLib.h"
@@ -167,7 +165,6 @@ void TerrainWindow::paintGL()
 
 		RenderDistance(&painter);
 		RenderArea(&painter);
-		RenderLake(&painter);
 
 		if (mb_RenderDim)
 			RenderDimensions();
@@ -209,44 +206,6 @@ void TerrainWindow::RenderPath(QPainter* pPainter)
 	path.lineTo(m_ptLastMouse.x, m_ptLastMouse.y);
 
 	pPainter->setPen(Qt::yellow);
-	pPainter->drawPath(path);
-
-	pPainter->setPen(penOld);
-
-	GLManager::PopCull();
-	GLManager::PopDepth();
-}
-
-void TerrainWindow::RenderLake(QPainter* pPainter)
-{
-	// Render lake definition line.
-	//
-	// This is the editable line users use to edit the lake boundary,
-	// it has nothing to do with rendering water, etc.
-	//
-
-	if (m_ViewID == View::ThreeD)		// NA for 3D view
-		return;
-	if (mp_Terrain->GetLakePointCount() < 2)
-		return;
-
-	GLManager::PushDepth(false);
-	GLManager::PushCull(false);
-
-	QPen penOld = pPainter->pen();
-
-	int xp, yp;
-	QPainterPath path;
-	WorldToPixel(mp_Terrain->GetLakePoint(0).x, mp_Terrain->GetLakePoint(0).y, xp, yp);
-	path.moveTo(static_cast<double>(xp), static_cast<double>(yp));
-
-	pPainter->setPen(Qt::blue);
-	for (int i = 1; i < mp_Terrain->GetLakePointCount(); ++i)
-	{
-		WorldToPixel(mp_Terrain->GetLakePoint(i).x, mp_Terrain->GetLakePoint(i).y, xp, yp);
-		path.lineTo(xp, yp);
-	}
-
 	pPainter->drawPath(path);
 
 	pPainter->setPen(penOld);
@@ -571,150 +530,6 @@ double TerrainWindow::GetMinViewHeight()
 	//TODO:
 	//calc frustum xsection
 	return height + 8.0;
-}
-
-void TerrainWindow::CreateLake(double maxDepth)
-{
-	// Create a lake.
-	//
-	// Inputs:
-	//		maxDepth = maximum lake depth
-	//		mp_Terrain = lake outline define
-	//
-
-	//if (mp_Terrain->GetLakePointCount() < 3)
-	//	return;
-
-	//GetApp()->LogWrite(__FUNCTION__, "Creating lake feature ...");
-
-	//std::vector<VEC2> pts = mp_Terrain->GetLakePoints();
-
-	//// get bounding rect and find the lowest
-	//// point on shoreline
-	//double minElev = mp_Terrain->GetMaxElev();
-	//RectD rectExtents(pts[0].x, pts[0].y, pts[0].x, pts[0].y);
-	//for (int i = 1; i < pts.size(); ++i)
-	//{
-	//	if (rectExtents.x0 > pts[i].x)
-	//		rectExtents.x0 = pts[i].x;
-	//	if (rectExtents.y0 > pts[i].y)
-	//		rectExtents.y0 = pts[i].y;
-	//	if (rectExtents.x1 < pts[i].x)
-	//		rectExtents.x1 = pts[i].x;
-	//	if (rectExtents.y1 < pts[i].y)
-	//		rectExtents.y1 = pts[i].y;
-
-	//	double elev = mp_Terrain->GetHeightNormal(pts[i].x, pts[i].y);
-	//	if (minElev > elev)
-	//		minElev = elev;
-	//}
-
-	//// bounding rect, row/col
-	//int row0, col0;
-	//int row1, col1;
-	//mp_Terrain->XYToRowCol(rectExtents.x0, rectExtents.y0, row0, col0);
-	//mp_Terrain->XYToRowCol(rectExtents.x1, rectExtents.y1, row1, col1);
-
-	//if (row0 == row1)
-	//	return;
-	//if (col0 == col1)
-	//	return;
-
-	//// scan for largest "min distance" value
-
-	//double dmax = 0.0;
-	//double y = rectExtents.y0;
-	//for (UInt16 r = row0; r <= row1; ++r)
-	//{
-	//	double x = rectExtents.x0;
-	//	for (UInt16 c = col0; c <= col1; ++c)
-	//	{
-	//		if (PointInPoly(x, y, pts))
-	//		{
-	//			// get distance from point to shore
-	//			double d = DistancePointToPoly(x, y, pts);
-	//			if (dmax < d)
-	//				dmax = d;
-	//		}
-	//		x += mp_Terrain->GetPitch();
-	//	}
-	//	y += mp_Terrain->GetPitch();
-	//}
-
-	//// excavate the patch
-
-	//int pointCtr = 0;
-	//y = rectExtents.y0;
-	//for (UInt16 r = row0; r <= row1; ++r)
-	//{
-	//	double x = rectExtents.x0;
-	//	for (UInt16 c = col0; c <= col1; ++c)
-	//	{
-	//		if (PointInPoly(x, y, pts))
-	//		{
-	//			// get distance from point to shore
-	//			double srcHeight = mp_Terrain->GetHeight(r, c);
-	//			double d = DistancePointToPoly(x, y, pts);
-	//			double sf = (d / dmax);
-	//			double depth = SCurve(sf) * maxDepth;
-
-	//			// set seafloor elevation
-	//			mp_Terrain->SetHeight(r, c, srcHeight - depth);
-	//			// set water depth
-	//			mp_Terrain->SetDepth(r, c, depth);
-
-	//			++pointCtr;
-	//		}
-	//		x += mp_Terrain->GetPitch();
-	//	}
-	//	y += mp_Terrain->GetPitch();
-	//}
-
-	//// update the texture
-
-	//GetApp()->LogWrite(__FUNCTION__, "Updating lake texture ...");
-
-	//if (m_imgWaterBed.GetWidth() > 0)
-	//{
-	//	SizeType texSize = mp_Terrain->GetTextureDim();
-	//	int texScale = mp_Terrain->GetTextureScale();
-
-	//	y = rectExtents.y0;
-	//	for (UInt16 r = row0*texScale; r <= row1*texScale; ++r)
-	//	{
-	//		double x = rectExtents.x0;
-	//		for (UInt16 c = col0*texScale; c <= col1*texScale; ++c)
-	//		{
-	//			if (PointInPoly(x, y, pts))
-	//			{
-	//				// terrain texture coordinates
-	//				int tx = c;
-	//				int ty = texSize.cy - r - 1;
-
-	//				PixelType pixLake = m_imgWaterBed.GetPixel(c % m_imgWaterBed.GetWidth(), r % m_imgWaterBed.GetHeight());
-	//				PixelType pixTerrain = mp_Terrain->GetPixel(tx, ty);
-
-	//				// calc blend based on distance from edge
-	//				double d = DistancePointToPoly(x, y, pts);
-	//				double sf = (d / dmax);
-	//				double scurve = SCurve(sf);
-	//				pixTerrain = pixTerrain.Lerp(scurve, pixLake);
-
-	//				mp_Terrain->SetPixel(tx, ty, pixTerrain);
-	//			}
-	//			x += mp_Terrain->GetPitch() / (double)texScale;
-	//		}
-	//		y += mp_Terrain->GetPitch() / (double)texScale;
-	//	}
-	//}
-
-	//mp_Terrain->ClearLakePoints();
-
-	//RectType rect(col0, row0, col1, row1);
-	//mp_Terrain->Rebuild(rect);
-	//update();
-
-	//GetApp()->LogWrite(__FUNCTION__, "Lake creation complete, %d points excavated.", pointCtr);
 }
 
 void TerrainWindow::Excavate(RectType rectPix)
@@ -1107,18 +922,6 @@ void TerrainWindow::mouseReleaseEvent(QMouseEvent* /* event */)
 			mb_Selecting = false;
 		}
 		break;
-	//case Tool::ToolType::Lake:
-	//	{
-	//		// finished drawing lake outline, create it
-	//		LakeDlg dlg(this);
-	//		dlg.SetElevationRange(mp_Terrain->GetMinElev(), mp_Terrain->GetMaxElev());
-	//		if (dlg.exec() == QDialog::Accepted)
-	//		{
-	//			CreateLake(dlg.GetDepth());
-	//		}
-	//		GetApp()->m_Tool.Clear();
-	//	}
-	//	break;
 	default:
 		break;
 	}
@@ -1226,12 +1029,6 @@ void TerrainWindow::mouseMoveEvent(QMouseEvent* event)
 				break;
 			case Tool::ToolType::Router:
 				Route(m_ptLastMouse.x, m_ptLastMouse.y, event->x(), event->y());
-				break;
-			case Tool::ToolType::Lake:
-				if (mp_Terrain)
-					mp_Terrain->AddLakePoint(VEC2(worldX, worldY));
-				break;
-			case Tool::ToolType::Ocean:
 				break;
 			case Tool::ToolType::ViewZoom:
 				{
@@ -2785,7 +2582,6 @@ void TerrainWindow::OnClear()
 
 	if (mp_Terrain)
 	{
-		mp_Terrain->ClearLakePoints();
 		mp_Terrain->ClearDistancePoints();
 		mb_Selecting = false;
 	}

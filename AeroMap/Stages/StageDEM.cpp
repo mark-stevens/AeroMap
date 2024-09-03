@@ -227,6 +227,8 @@ void StageDEM::CreateTerrainModel(XString input_geotiff, XString dem_type)
 					double height = pRaster->GetHeight(row, col);
 					if (height != pRaster->GetNoData())
 						pTerrain->SetHeight(out_rows - dst_row - 1, dst_col, height);
+					else 
+						pTerrain->SetFlags(out_rows - dst_row - 1, dst_col, (UInt8)Terrain::Flags::NODATA);
 					++dst_col;
 				}
 				++dst_row;

@@ -689,42 +689,45 @@ void Terrain::UpdateHeightRange()
 		for (int col = 0; col < GetColCount(); ++col)
 		{
 			TerrainVertexDiskType vx = m_trn[row][col];
-			if (IsWater(row, col))
+			if ((vx.Flags & static_cast<UInt8>(Flags::NODATA)) == 0)
 			{
-				if (waterInit == false)
+				if (IsWater(row, col))
 				{
-					m_Header.MaxDepth = vx.Depth;
-					waterInit = true;
-				}
-				else
-				{
-					if (m_Header.MaxDepth < vx.Depth)
+					if (waterInit == false)
+					{
 						m_Header.MaxDepth = vx.Depth;
-				}
-			}
-			else
-			{
-				if (landInit == false)
-				{
-					m_Header.MinHeight = vx.Height;
-					m_Header.MaxHeight = vx.Height;
-					landInit = true;
+						waterInit = true;
+					}
+					else
+					{
+						if (m_Header.MaxDepth < vx.Depth)
+							m_Header.MaxDepth = vx.Depth;
+					}
 				}
 				else
 				{
-					if (m_Header.MinHeight > vx.Height)
+					if (landInit == false)
+					{
 						m_Header.MinHeight = vx.Height;
-					if (m_Header.MaxHeight < vx.Height)
 						m_Header.MaxHeight = vx.Height;
+						landInit = true;
+					}
+					else
+					{
+						if (m_Header.MinHeight > vx.Height)
+							m_Header.MinHeight = vx.Height;
+						if (m_Header.MaxHeight < vx.Height)
+							m_Header.MaxHeight = vx.Height;
+					}
 				}
-			}
 
-			// update terrain low point; this is not simply min elev, or max depth, since 
-			// we don't know what max depth is relative to (& min elev is only the lowest 
-			// land point)
-			double minz = vx.Height - vx.Depth;
-			if (minz < mf_MinZ)
-				mf_MinZ = minz;
+				// update terrain low point; this is not simply min elev, or max depth, since 
+				// we don't know what max depth is relative to (& min elev is only the lowest 
+				// land point)
+				double minz = vx.Height - vx.Depth;
+				if (minz < mf_MinZ)
+					mf_MinZ = minz;
+			}
 		}
 	}
 }
@@ -997,48 +1000,6 @@ void Terrain::RowColToLL(int row, int col, double& lat, double& lon)
 		assert(false);
 		break;
 	}
-}
-
-int Terrain::AddLakePoint(VEC2& pos)
-{
-	// Add a point to lake (closed water body) polygon.
-	//
-	// Inputs:
-	//		pos = point to add, world units
-	//
-
-	// don't allow adding point on top of previous point
-	if (mv_Lake.size() > 0)
-	{
-		if (Distance(pos, mv_Lake.back()) < GetPitch() * 0.1)
-			return static_cast<int>(mv_Lake.size());
-	}
-
-	mv_Lake.push_back(pos);
-	return static_cast<int>(mv_Lake.size());
-}
-
-int Terrain::GetLakePointCount() const
-{
-	return static_cast<int>(mv_Lake.size());
-}
-
-const VEC2 Terrain::GetLakePoint(unsigned int index)
-{
-	if (index < mv_Lake.size())
-		return mv_Lake[index];
-
-	return VEC2();
-}
-
-std::vector<VEC2> Terrain::GetLakePoints() const
-{
-	return mv_Lake;
-}
-
-void Terrain::ClearLakePoints()
-{
-	return mv_Lake.clear();
 }
 
 int Terrain::AddDistancePoint(VEC2& pos)

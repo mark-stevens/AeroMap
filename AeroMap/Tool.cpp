@@ -206,10 +206,6 @@ const char* Tool::GetName()
 		return "Excavate";
 	case ToolType::Router:				// cut path with router bit
 		return "Router";
-	case ToolType::Lake:
-		return "Lake";
-	case ToolType::Ocean:
-		return "Ocean";
 	case ToolType::WaterFill:			// fill region with water-type vertices
 		return "WaterFill";
 	case ToolType::TexPaint:

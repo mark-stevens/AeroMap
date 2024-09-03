@@ -127,14 +127,6 @@ public:
 	bool   GetContourClosed(int idx) { return mv_ContourLines[idx].closed; }				// # of contour lines
 	std::vector<PointD> GetContourPoints(int idx) { return mv_ContourLines[idx].pts; }		// ordered list of contour line points
 
-	// water features
-
-	int AddLakePoint(VEC2& pos);
-	int GetLakePointCount() const;
-	const VEC2 GetLakePoint(unsigned int index);
-	std::vector<VEC2> GetLakePoints() const;
-	void ClearLakePoints();
-
 	// measurement
 
 	int AddDistancePoint(VEC2& pos);
@@ -205,7 +197,6 @@ protected:
 
 	double mf_MinZ;				// the lowest point in terrain
 
-	std::vector<VEC2> mv_Lake;			// closed water body polygon
 	std::vector<VEC2> mv_Distance;		// connected points defining distance measurement
 
 	// "Contour Lines" are the vectorized results of processed 

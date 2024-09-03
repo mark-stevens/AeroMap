@@ -873,22 +873,27 @@ void TerrainGL::LoadTerrain()
 
 	// Load texture file
 
-//TODO:
-	//create temp texture file that can be modified when color scale changes
+	// create texture file that can be modified when color scale changes
 	ms_TextureFile = ms_FileName + ".png";
-	PngFile pngFile;
-	if (pngFile.Create(GetColCount(), GetRowCount(), 4))
+//TODO:
+	// if file exists == false
 	{
-		for (int row = 0; row < GetRowCount(); ++row)
+		PngFile pngFile;
+		if (pngFile.Create(GetColCount(), GetRowCount(), 4))
 		{
-			for (int col = 0; col < GetColCount(); ++col)
+			for (int row = 0; row < GetRowCount(); ++row)
 			{
-				PixelType pix;
-
-				pngFile.SetPixel(col, row, pix);
+				for (int col = 0; col < GetColCount(); ++col)
+				{
+					PixelType pix;
+					double sf = (GetHeight(row, col) - GetMinElev()) / (GetMaxElev() - GetMinElev());
+					pix.SetGraySF(sf);
+					pngFile.SetPixel(col, row, pix);
+				}
 			}
+			int code = pngFile.Save(ms_TextureFile.c_str());
+			assert(code == 0);
 		}
-		int code = pngFile.Save(ms_TextureFile.c_str());
 	}
 
 	if (!m_texTerrain.Load(ms_TextureFile.c_str()))
@@ -943,7 +948,10 @@ void TerrainGL::LoadTile(TileType* pTile, UInt32 tileRow, UInt32 tileCol)
 			VertexBufferGL::VertexPNTF vx;
 			vx.x = static_cast<float>(trnCol * GetPitch());
 			vx.y = static_cast<float>(trnRow * GetPitch());
-			vx.z = static_cast<float>(vxDesc.Height-vxDesc.Depth);	// subtract water, if any
+			if ((vxDesc.Flags & static_cast<UInt8>(Flags::NODATA)) > 0)
+				vx.z = static_cast<float>(GetMinElev());
+			else
+				vx.z = static_cast<float>(vxDesc.Height - vxDesc.Depth);	// subtract water, if any
 			vx.nx = static_cast<float>(N.x);
 			vx.ny = static_cast<float>(N.y);
 			vx.nz = static_cast<float>(N.z);
