@@ -39,9 +39,6 @@ private:
 		DroneRoot,			// root node for drone photogrammetry
 		DroneInput,			// location of drone photogrammetry inputs
 		DroneOutput,		// root folder that will receive outputs
-		DroneOutputDTM,
-		DroneOutputDSM,
-		DroneOutputOrtho,
 
 		LidarRoot,			// root node for lidar workspace
 		LidarFile,			// single file entry (las or laz)

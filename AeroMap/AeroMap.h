@@ -76,6 +76,14 @@ public:
 		Terrain			// terrain model window
 	};
 
+	enum class OutputItem		// ids for individual outputs
+	{
+		None,
+		Ortho,			// orthophoto
+		DTM,			// digital terrain model
+		DSM				// digital surface model
+	};
+
 	Tool m_Tool;		// active tool
 
 public:

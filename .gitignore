@@ -23,6 +23,7 @@ AeroMap/Release
 
 Lib/CppUnitLite/x64
 Lib/gdal-3.2.1/x64
+Lib/gdal-3.2.1/gdal
 Lib/jpeg-9a/x64
 Lib/laslib/x64
 Lib/laszip/x64

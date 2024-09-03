@@ -786,7 +786,7 @@ void TerrainGL::Rebuild(RectType& rectRegion)
 	m_texTerrain.Update();
 
 	// update skirt
-	LoadSkirt();
+	//LoadSkirt();
 }
 
 void TerrainGL::UpdateSim(int msec)
@@ -885,10 +885,10 @@ void TerrainGL::LoadTerrain()
 			{
 				PixelType pix;
 
-				//pngFile.SetPixel(col, row, pix);
+				pngFile.SetPixel(col, row, pix);
 			}
 		}
-		//int code = pngFile.Save(ms_TextureFile.c_str());
+		int code = pngFile.Save(ms_TextureFile.c_str());
 	}
 
 	if (!m_texTerrain.Load(ms_TextureFile.c_str()))

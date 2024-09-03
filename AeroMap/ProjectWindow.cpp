@@ -121,14 +121,14 @@ void ProjectWindow::UpdateUI()
 	// generated outputs
 
 	str = XString::Format("Orthophoto: %s", QFile::exists(tree.odm_orthophoto_tif.c_str()) ? tree.odm_orthophoto_tif.c_str() : "---");
-	QTreeWidgetItem* pItem = new QTreeWidgetItem(QStringList(str.c_str()), static_cast<int>(ItemType::DroneOutputOrtho));
+	QTreeWidgetItem* pItem = new QTreeWidgetItem(QStringList(str.c_str()), static_cast<int>(AeroMap::OutputItem::Ortho));
 	pItem->setToolTip(0, str.c_str());
 	mp_ItemDroneOutput->addChild(pItem);
 
 	if (QFile::exists(tree.dem_dtm.c_str()))
 	{
 		str = XString::Format("DTM: %s", QFile::exists(tree.dem_dtm.c_str()) ? tree.odm_dem_dtm.c_str() : "---");
-		pItem = new QTreeWidgetItem(QStringList(str.c_str()), static_cast<int>(ItemType::DroneOutputDTM));
+		pItem = new QTreeWidgetItem(QStringList(str.c_str()), static_cast<int>(AeroMap::OutputItem::DTM));
 		pItem->setToolTip(0, str.c_str());
 		mp_ItemDroneOutput->addChild(pItem);
 	}
@@ -136,7 +136,7 @@ void ProjectWindow::UpdateUI()
 	if (QFile::exists(tree.dem_dsm.c_str()))
 	{
 		str = XString::Format("DSM: %s", QFile::exists(tree.dem_dsm.c_str()) ? tree.dem_dsm.c_str() : "---");
-		pItem = new QTreeWidgetItem(QStringList(str.c_str()), static_cast<int>(ItemType::DroneOutputDSM));
+		pItem = new QTreeWidgetItem(QStringList(str.c_str()), static_cast<int>(AeroMap::OutputItem::DSM));
 		pItem->setToolTip(0, str.c_str());
 		mp_ItemDroneOutput->addChild(pItem);
 	}
@@ -228,17 +228,17 @@ void ProjectWindow::OnItemDoubleClicked(QTreeWidgetItem* pItem, int column)
 	}
 	else if (pItem->parent() == mp_ItemDroneOutput)
 	{
-		if (itemType == ItemType::DroneOutputOrtho)
+		if ((int)itemType == (int)AeroMap::OutputItem::Ortho)
 		{
 			GetApp()->ActivateView(AeroMap::ViewType::DroneOrtho);
 		}
-		else if (itemType == ItemType::DroneOutputDTM)
+		else if ((int)itemType == (int)AeroMap::OutputItem::DTM)
 		{
-			GetApp()->ActivateView(AeroMap::ViewType::Terrain);
+			GetApp()->ActivateView(AeroMap::ViewType::Terrain, (int)AeroMap::OutputItem::DTM);
 		}
-		else if (itemType == ItemType::DroneOutputDSM)
+		else if ((int)itemType == (int)AeroMap::OutputItem::DSM)
 		{
-			GetApp()->ActivateView(AeroMap::ViewType::Terrain);
+			GetApp()->ActivateView(AeroMap::ViewType::Terrain, (int)AeroMap::OutputItem::DSM);
 		}
 	}
 	else if (pItem->parent() == mp_ItemLidarRoot)
@@ -263,21 +263,26 @@ void ProjectWindow::DisplayProperties(QTreeWidgetItem* pItem)
 {
 	ItemType itemType = static_cast<ItemType>(pItem->type());
 
-	switch (itemType) {
-	case ItemType::ProjectRoot:
-		break;
-	case ItemType::DroneInput:
-		break;
-	case ItemType::DroneOutput:
-		break;
-	case ItemType::DroneOutputDTM:
-		DisplayTerrainProperties(pItem);
-		break;
-	case ItemType::LidarFile:
-		DisplayLidarProperties(pItem);
-		break;
-	default:
-		break;
+	if (pItem->parent() == mp_ItemDroneOutput)
+	{
+		if (((int)itemType == (int)AeroMap::OutputItem::DTM) || ((int)itemType == (int)AeroMap::OutputItem::DSM))
+			DisplayTerrainProperties(pItem);
+	}
+	else
+	{
+		switch (itemType) {
+		case ItemType::ProjectRoot:
+			break;
+		case ItemType::DroneInput:
+			break;
+		case ItemType::DroneOutput:
+			break;
+		case ItemType::LidarFile:
+			DisplayLidarProperties(pItem);
+			break;
+		default:
+			break;
+		}
 	}
 }
 
@@ -357,7 +362,7 @@ void ProjectWindow::DisplayTerrainProperties(QTreeWidgetItem* pItem)
 
 	XString file_name;
 	ItemType itemType = static_cast<ItemType>(pItem->type());
-	if (itemType == ItemType::DroneOutputDTM)
+	if ((int)itemType == (int)AeroMap::OutputItem::DTM)
 		file_name = tree.dem_dtm;
 	else
 		file_name = tree.dem_dsm;
@@ -405,10 +410,6 @@ void ProjectWindow::contextMenuEvent(QContextMenuEvent* event)
 		menu.addAction(mp_actionOpenFolder);
 		menu.addAction(mp_actionProperties);
 	case ItemType::DroneOutput:
-		menu.addAction(mp_actionOpenFolder);
-		menu.addAction(mp_actionProperties);
-		break;
-	case ItemType::DroneOutputDTM:
 		menu.addAction(mp_actionOpenFolder);
 		menu.addAction(mp_actionProperties);
 		break;

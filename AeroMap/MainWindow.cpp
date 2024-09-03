@@ -1002,10 +1002,12 @@ void MainWindow::OnViewChanged(AeroMap::ViewType view, int subItem)
 	case AeroMap::ViewType::Terrain:
 		{
 			assert(mp_TerrainWindow == nullptr);
+			assert((subItem == (int)AeroMap::OutputItem::DTM) || (subItem == (int)AeroMap::OutputItem::DSM));
 
-			//TODO:
-			//need to differentiate dtm/dsm
-			mp_TerrainWindow = new TerrainWindow(this, tree.dem_dtm.c_str());
+			if (subItem == (int)AeroMap::OutputItem::DTM)
+				mp_TerrainWindow = new TerrainWindow(this, tree.dem_dtm.c_str());
+			else if (subItem == (int)AeroMap::OutputItem::DSM)
+				mp_TerrainWindow = new TerrainWindow(this, tree.dem_dsm.c_str());
 			mp_mdiArea->addSubWindow(mp_TerrainWindow);
 
 			mp_TerrainWindow->showMaximized();
