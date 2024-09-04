@@ -141,7 +141,7 @@ XString Cropper::create_bounds_geojson(XString pointcloud_path, double buffer_di
 	
 	XString boundary_file_path = path("boundary.json");
 	
-	QString args;
+	args.clear();
 	args.push_back("info");
 	args.push_back("--boundary");
 	args.push_back("--filters.hexbin.edge_size=1");
