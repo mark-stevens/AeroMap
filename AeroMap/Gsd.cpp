@@ -149,6 +149,70 @@ double Gsd::calculate_gsd_from_focal_ratio(double focal_ratio, double flight_hei
     return ((flight_height * 100.0) / image_width) / focal_ratio;
 }
 
+int Gsd::image_max_size(std::vector<Project::ImageType>& photos, double target_resolution, XString reconstruction_json, double gsd_error_estimate,
+    bool ignore_gsd, bool has_gcp)
+{
+    // Inputs:
+    //      photos              = images database
+    //      target_resolution   = resolution the user wants have in cm / pixel
+    //      reconstruction_json = path to OpenSfM's reconstruction.json
+    //      gsd_error_estimate  = percentage of estimated error in the GSD calculation to set an upper bound on resolution.
+    //      ignore_gsd          = if set to True, simply return the largest side of the largest image in the images database.
+    // Outputs:
+    //      return  = dimension in pixels calculated by taking the image_scale_factor and applying it to the size of the largest image.
+    //                Returned value is never higher than the size of the largest side of the largest image.
+
+    int max_size = 0;
+
+    int max_width = 0;
+    int max_height = 0;
+
+    double isf = 1.0;
+    if (ignore_gsd)
+        isf = 1.0;
+    else
+        isf = image_scale_factor(target_resolution, reconstruction_json, gsd_error_estimate, has_gcp = has_gcp);
+    
+    for (Project::ImageType image : photos)
+    {
+        max_width = std::max((int)image.exif.ImageWidth, max_width);
+        max_height = std::max((int)image.exif.ImageHeight, max_height);
+    }
+    
+    max_size = ceil(std::max(max_width, max_height)*isf);
+
+    return max_size;
+}
+
+double Gsd::image_scale_factor(double target_resolution, XString reconstruction_json, double gsd_error_estimate, bool has_gcp)
+{
+    // Inputs:
+    //      target_resolution   = resolution the user wants have in cm / pixel
+    //      reconstruction_json path to OpenSfM's reconstruction.json
+    //      gsd_error_estimate percentage of estimated error in the GSD calculation to set an upper bound on resolution.
+    // Outputs:
+    //      return  = down-scale (<= 1) value to apply to images to achieve the target resolution by comparing the current GSD of the reconstruction.
+    //                If a GSD cannot be computed, it just returns 1. 
+    //                Returned scale values are never higher than 1 and are always obtained by dividing by 2 (e.g. 0.5, 0.25, etc.)
+    //
+
+    double gsd = opensfm_reconstruction_average_gsd(reconstruction_json, has_gcp);
+    
+    if ((gsd > 0.0) && (target_resolution > 0.0))
+    {
+        gsd = gsd * (1.0 + gsd_error_estimate);
+        double isf = std::min(1.0, abs(gsd) / target_resolution);
+        double ret = 0.5;
+        while (ret >= isf)
+            ret /= 2.0;
+        return ret * 2.0;
+    }
+    else
+    {
+        return 1.0;
+    }
+}
+
 //def calculate_gsd(sensor_width, flight_height, focal_length, image_width):
 //    """
 //    :param sensor_width in millimeters
@@ -185,46 +249,3 @@ double Gsd::calculate_gsd_from_focal_ratio(double focal_ratio, double flight_hei
 //    else:
 //        return default_value
 //
-//
-//def image_max_size(photos, target_resolution, reconstruction_json, gsd_error_estimate = 0.5, ignore_gsd=False, has_gcp=False):
-//    """
-//    :param photos images database
-//    :param target_resolution resolution the user wants have in cm / pixel
-//    :param reconstruction_json path to OpenSfM's reconstruction.json
-//    :param gsd_error_estimate percentage of estimated error in the GSD calculation to set an upper bound on resolution.
-//    :param ignore_gsd if set to True, simply return the largest side of the largest image in the images database.
-//    :return A dimension in pixels calculated by taking the image_scale_factor and applying it to the size of the largest image.
-//        Returned value is never higher than the size of the largest side of the largest image.
-//    """
-//    max_width = 0
-//    max_height = 0
-//    if ignore_gsd:
-//        isf = 1.0
-//    else:
-//        isf = image_scale_factor(target_resolution, reconstruction_json, gsd_error_estimate, has_gcp=has_gcp)
-//
-//    for p in photos:
-//        max_width = max(p.width, max_width)
-//        max_height = max(p.height, max_height)
-//
-//    return int(math.ceil(max(max_width, max_height) * isf))
-//
-//def image_scale_factor(target_resolution, reconstruction_json, gsd_error_estimate = 0.5, has_gcp=False):
-//    """
-//    :param target_resolution resolution the user wants have in cm / pixel
-//    :param reconstruction_json path to OpenSfM's reconstruction.json
-//    :param gsd_error_estimate percentage of estimated error in the GSD calculation to set an upper bound on resolution.
-//    :return A down-scale (<= 1) value to apply to images to achieve the target resolution by comparing the current GSD of the reconstruction.
-//        If a GSD cannot be computed, it just returns 1. Returned scale values are never higher than 1 and are always obtained by dividing by 2 (e.g. 0.5, 0.25, etc.)
-//    """
-//    gsd = opensfm_reconstruction_average_gsd(reconstruction_json, use_all_shots=has_gcp)
-//
-//    if gsd is not None and target_resolution > 0:
-//        gsd = gsd * (1 + gsd_error_estimate)
-//        isf = min(1.0, abs(gsd) / target_resolution)
-//        ret = 0.5
-//        while ret >= isf:
-//            ret /= 2.0
-//        return ret * 2.0
-//    else:
-//        return 1.0

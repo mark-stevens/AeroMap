@@ -12,6 +12,10 @@ public:
 
 	static double opensfm_reconstruction_average_gsd(XString reconstruction_json, bool use_all_shots = false);
 	static double calculate_gsd_from_focal_ratio(double focal_ratio, double flight_height, int image_width);
+	
+	static int image_max_size(std::vector<Project::ImageType>& photos, double target_resolution, XString reconstruction_json, double gsd_error_estimate = 0.5,
+		bool ignore_gsd = false, bool has_gcp = false);
+	static double image_scale_factor(double target_resolution, XString reconstruction_json, double gsd_error_estimate = 0.5, bool has_gcp = false);
 };
 
 #endif // #ifndef GSD_H
