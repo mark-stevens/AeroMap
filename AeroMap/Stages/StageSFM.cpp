@@ -2,6 +2,8 @@
 // Structure from motion.
 //
 
+#include "Gsd.h"
+#include "TextFile.h"
 #include "StageSFM.h"
 
 int StageSFM::Run()
@@ -85,8 +87,19 @@ int StageSFM::Run()
 		//			"d:/test_odm/opensfm"
 	}
 
-	// Updating d:/test_odm/opensfm/config.yaml
-	// undistorted_image_max_size: 4000
+	// Make sure it's capped by the depthmap-resolution arg,
+	// since the undistorted images are used for MVS
+
+	GetApp()->LogWrite("OpenSFM: Calculating undistorted max image size...");
+
+	//TODO:
+	bool has_gcp = false;
+	int image_max_size = Gsd::image_max_size(GetProject().GetImageList(), arg.orthophoto_resolution, tree.opensfm_reconstruction, 0.5, arg.ignore_gsd, has_gcp);
+	int depthmap_res = GetProject().get_depthmap_resolution();
+	int undist_image_max_size = std::max(image_max_size, depthmap_res);
+
+	GetProject().set_undistorted_image_max_size(undist_image_max_size);
+	UpdateConfigYaml("undistorted_image_max_size", undist_image_max_size);
 
 	GetApp()->LogWrite("OpenSFM: Undistort...");
 	args.clear();
@@ -277,8 +290,8 @@ int StageSFM::WriteConfigYaml()
 	FILE* pFile = fopen(file_name.c_str(), "wt");
 	if (pFile)
 	{
-//TODO:
-//understand source & meaning of each of these settings
+		//TODO:
+		//understand source & meaning of each of these settings
 		fprintf(pFile, "align_method: auto\n");
 		fprintf(pFile, "align_orientation_prior: vertical\n");
 		fprintf(pFile, "bundle_outlier_filtering_type: AUTO\n");
@@ -301,6 +314,47 @@ int StageSFM::WriteConfigYaml()
 		fprintf(pFile, "undistorted_image_max_size: 4000\n");
 		fprintf(pFile, "use_altitude_tag: true\n");
 		fprintf(pFile, "use_exif_size: false\n");
+
+		fclose(pFile);
+	}
+
+	return status;
+}
+
+int StageSFM::UpdateConfigYaml(XString key, int value)
+{
+	// Update single value in 'opensfm/config.yaml'
+	//
+
+	int status = 0;
+
+	XString file_name = XString::CombinePath(tree.opensfm, "config.yaml");
+
+	GetApp()->LogWrite("Updating %s...", file_name.c_str());
+
+	TextFile config(file_name.c_str());
+
+	FILE* pFile = fopen(file_name.c_str(), "wt");
+	if (pFile)
+	{
+		key.Trim();
+		if (key.EndsWith(":") == false)
+			key += ":";
+
+		// write config.yaml with new value
+		for (unsigned int i = 0; i < config.GetLineCount(); ++i)
+		{
+			XString line = config.GetLine(i).c_str();
+
+			if (line.BeginsWith(key.c_str()))
+			{
+				fprintf(pFile, "%s %d\n", key.c_str(), value);
+			}
+			else
+			{
+				fprintf(pFile, "%s\n", line.c_str());
+			}
+		}
 
 		fclose(pFile);
 	}

@@ -41,6 +41,7 @@ struct ArgType
 	bool pc_rectify;
 	double pc_filter;
 	double pc_sample;
+	XString pc_quality;
 
 	double smrf_scalar;
 	double smrf_slope;
@@ -169,6 +170,13 @@ public:
 	void    SetDroneInputPath(XString path);
 	XString GetDroneOutputPath();
 	void    SetDroneOutputPath(XString path);
+	
+	int get_depthmap_resolution();
+	int get_undistorted_image_max_size();
+	void set_undistorted_image_max_size(int size);
+
+	int GetMaxDim();				// single largest image dimension
+	SizeType GetMaxDims();			// dimensions of largest image (max width x height)
 
 	XString GetCoordsFileName();
 
@@ -195,6 +203,11 @@ private:
 
 	XString ms_DroneInputPath;	// location of drone photogrammetry inputs
 	XString ms_DroneOutputPath;	// root folder that will receive outputs
+
+	int m_MaxDim;			// single largest image dimension
+	SizeType m_MaxDims;		// dimensions of largest image (max width x height)
+	
+	int m_undistorted_image_max_size;
 
 	int m_ErrorCtr;				// # of errors in project file
 	bool mb_IsDirty;			// unsaved changes

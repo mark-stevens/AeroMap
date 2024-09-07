@@ -20,6 +20,7 @@ private:
 	int WriteCameraModelsJson();
 	int WriteReferenceLLA();
 	int WriteConfigYaml();
+	int UpdateConfigYaml(XString key, int value);
 
 	int WriteCamerasJson();
 };

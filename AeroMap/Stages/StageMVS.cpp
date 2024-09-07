@@ -65,7 +65,7 @@ int StageMVS::Run()
         args.push_back("--resolution-level");       // how many times to scale down the images before point cloud computation
         args.push_back("3");
         args.push_back("--max-resolution");
-        args.push_back("4000");                     //TODO: outputs['undist_image_max_size']
+        args.push_back(XString::Format("%d", GetProject().get_undistorted_image_max_size()).c_str());
         args.push_back("--max-threads");
         args.push_back(XString::Format("%d", arg.max_concurrency).c_str());
         args.push_back("--number-views-fuse");      //  minimum number of images that agrees with an estimate during fusion in order to consider it inlier (<2=only merge depth maps)

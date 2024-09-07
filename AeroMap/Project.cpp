@@ -40,7 +40,11 @@ enum class Section
 
 Project::Project()
 	: mb_IsDirty(false)
+	, m_MaxDim(0)
+	, m_MaxDims(0, 0)
+	, m_undistorted_image_max_size(0)
 {
+	m_ImageList.reserve(128);
 	mv_Lidar.reserve(32);
 }
 
@@ -234,6 +238,11 @@ int Project::LoadImageList()
 {
 	GetApp()->LogWrite("Loading images...");
 
+	m_MaxDim = 0;
+	m_MaxDims.cx = 0;
+	m_MaxDims.cy = 0;
+	int max_mp = 0;
+
 	QDir dir(GetProject().GetDroneInputPath().c_str());
 	dir.setFilter(QDir::Files | QDir::NoSymLinks | QDir::NoDotAndDotDot);
 
@@ -288,6 +297,21 @@ int Project::LoadImageList()
 			entry.camera_str_osfm = AeroLib::GetCameraString(entry.exif, true);
 			entry.camera_str_odm = AeroLib::GetCameraString(entry.exif, false);
 
+			// record max sizes
+
+			if (m_MaxDim < (int)entry.exif.ImageWidth)
+				m_MaxDim = (int)entry.exif.ImageWidth;
+			if (m_MaxDim < (int)entry.exif.ImageHeight)
+				m_MaxDim = (int)entry.exif.ImageHeight;
+
+			int mp = entry.exif.ImageWidth * entry.exif.ImageHeight;
+			if (mp > max_mp)
+			{
+				max_mp = mp;
+				m_MaxDims.cx = entry.exif.ImageWidth;
+				m_MaxDims.cy = entry.exif.ImageHeight;
+			}
+
 			m_ImageList.push_back(entry);
 		}
 	}
@@ -306,6 +330,16 @@ const std::vector<Project::ImageType>& Project::GetImageList()
 	//
 
 	return m_ImageList;
+}
+
+int Project::GetMaxDim()
+{
+	return m_MaxDim;
+}
+
+SizeType Project::GetMaxDims()
+{
+	return m_MaxDims;
 }
 
 XString Project::GetFileName()
@@ -469,6 +503,58 @@ void Project::Update()
 	emit projectChanged_sig();
 }
 
+int Project::get_depthmap_resolution()
+{
+	int depth_map_res = 640;	// Sensible default
+
+	//	max_dims = find_largest_photo_dims(photos)
+	int min_dim = 320;		// Never go lower than this
+
+	int w = m_MaxDims.cx;
+	int h = m_MaxDims.cy;
+	if (w > 0 && h > 0)
+	{
+		int max_dim = std::max(w, h);
+
+		double megapixels = (double)(w * h) * 1E-6;
+		double multiplier = 1.0;
+		if (megapixels < 6.0)
+			multiplier = 2.0;
+		else if (megapixels > 42.0)
+			multiplier = 0.5;
+
+		double pc_quality = 0.125;
+		if (arg.pc_quality == "ultra")
+			pc_quality = 0.5;
+		else if (arg.pc_quality == "high")
+			pc_quality = 0.25;
+		else if (arg.pc_quality == "medium")
+			pc_quality = 0.125;
+		else if (arg.pc_quality == "low")
+			pc_quality = 0.0675;
+		else if (arg.pc_quality == "lowest")
+			pc_quality = 0.03375;
+
+		depth_map_res = std::max(min_dim, int(max_dim * pc_quality * multiplier));
+	}
+	else
+	{
+		Logger::Write(__FUNCTION__, "Cannot compute max image dimensions, going with default depthmap_resolution of %d", depth_map_res);
+	}
+
+	return depth_map_res;
+}
+
+int Project::get_undistorted_image_max_size()
+{
+	return m_undistorted_image_max_size;
+}
+
+void Project::set_undistorted_image_max_size(int size)
+{
+	m_undistorted_image_max_size = size;
+}
+
 void Project::InitArg()
 {
 	arg.dtm = false;
@@ -535,6 +621,11 @@ void Project::InitArg()
 	//				Filters the point cloud by keeping only a single point around a radius N (in meters). This can
 	//				be useful to limit the output resolution of the point cloud and remove duplicate points. Set
 	//				to 0 to disable sampling. Default: 0
+	arg.pc_quality = "medium";
+	// --pc-quality <string>
+	//				Set point cloud quality. Higher quality generates better, denser point clouds, but requires
+	//				more memory and takes longer. Each step up in quality increases processing time roughly by a
+	//				factor of 4x. Can be one of: ultra, high, medium, low, lowest. Default: medium
 
 	arg.use_3dmesh = false;
 	// --use-3dmesh 
@@ -648,10 +739,6 @@ void Project::InitArg()
 	//				Specify the distance between camera shot locations and the outer edge of the boundary when
 	//				computing the boundary with --auto-boundary. Set to 0 to automatically choose a value.
 	//				Default: 0
-	// --pc-quality <string>
-	//				Set point cloud quality. Higher quality generates better, denser point clouds, but requires
-	//				more memory and takes longer. Each step up in quality increases processing time roughly by a
-	//				factor of 4x.Can be one of: ultra, high, medium, low, lowest. Default: medium
 	// --pc-csv              Export the georeferenced point cloud in CSV format. Default: False
 	// --pc-las              Export the georeferenced point cloud in LAS format. Default: False
 	// --pc-ept              Export the georeferenced point cloud in Entwine Point Tile (EPT) format. Default: False

@@ -149,7 +149,7 @@ double Gsd::calculate_gsd_from_focal_ratio(double focal_ratio, double flight_hei
     return ((flight_height * 100.0) / image_width) / focal_ratio;
 }
 
-int Gsd::image_max_size(std::vector<Project::ImageType>& photos, double target_resolution, XString reconstruction_json, double gsd_error_estimate,
+int Gsd::image_max_size(const std::vector<Project::ImageType>& photos, double target_resolution, XString reconstruction_json, double gsd_error_estimate,
     bool ignore_gsd, bool has_gcp)
 {
     // Inputs:
@@ -171,7 +171,7 @@ int Gsd::image_max_size(std::vector<Project::ImageType>& photos, double target_r
     if (ignore_gsd)
         isf = 1.0;
     else
-        isf = image_scale_factor(target_resolution, reconstruction_json, gsd_error_estimate, has_gcp = has_gcp);
+        isf = image_scale_factor(target_resolution, reconstruction_json, gsd_error_estimate, has_gcp);
     
     for (Project::ImageType image : photos)
     {
