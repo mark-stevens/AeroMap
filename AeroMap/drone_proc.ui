@@ -241,7 +241,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Gap Fill Steps:</string>
+    <string>DEM Gap Fill Steps:</string>
    </property>
   </widget>
  </widget>
