@@ -2,6 +2,8 @@
 // Common routines for AeroMap.
 //
 
+#include <gdal_alg.h>
+
 #include "TextFile.h"
 #include "AeroLib.h"
 
@@ -400,5 +402,138 @@ namespace AeroLib
 
 			QFile::rename(src_file.c_str(), dest_file.c_str());
 		}
+	}
+
+	XString related_file_path(XString input_file_path, XString prefix, XString postfix)
+	{
+		// For example : related_file_path("/path/to/file.ext", "a.", ".b")
+		// -- > "/path/to/a.file.b.ext"
+		//
+
+		XString path = input_file_path.GetPathName();
+		XString file_name = input_file_path.GetFileName();
+		// path = path / to
+		// filename = file.ext
+
+		int pos = file_name.ReverseFind('.');
+		if (pos > -1)
+		{
+			XString basename = file_name.Left(pos);
+			XString ext = file_name.Mid(pos);
+			// basename = file
+			// ext = .ext
+
+			XString root_name = XString::Format("%s%s%s%s", prefix.c_str(), basename.c_str(), postfix.c_str(), ext.c_str());
+			return XString::CombinePath(path, root_name);
+		}
+
+		return input_file_path;
+	}
+
+	CPLErr gdal_fillnodata(XString src_file, XString dst_file, double max_distance, int smooth_iterations, int src_band, XString format)
+	{
+		// Fill nodata areas in a raster by interpolation
+		//
+		// Port of Frank Warmerdam's gdal_fillnodata.py
+		//
+		// Inputs:
+		//		src_file		=
+		//		dst_file		=
+		//		max_distance	= maximum distance (in pixels) that the algorithm will search out for values to interpolate.The default is 100 pixels.
+		//		smooth_iterations	=
+		//		src_band		= 1-based
+		//		format			= name of gdal driver to use
+		//
+
+		CPLErr result = CPLErr::CE_None;
+		
+		//	mask = 'default'
+
+		// Open source file
+
+		GDALDataset* src_ds = nullptr;
+		if (dst_file.GetLength() == 0)
+			src_ds = (GDALDataset*)GDALOpen(src_file.c_str(), GA_Update);
+		else
+			src_ds = (GDALDataset*)GDALOpen(src_file.c_str(), GA_ReadOnly);
+
+		if (src_ds == nullptr)
+		{
+			Logger::Write(__FUNCTION__, "Unable to open '%s'", src_file.c_str());
+			assert(false);
+			//return nullptr;
+		}
+
+		GDALRasterBand* pSrcBand = src_ds->GetRasterBand(src_band);
+
+		GDALDataset* mask_ds = nullptr;
+		//if (mask == "default")
+		//	maskband = srcband.GetMaskBand()
+		//else if (mask == "none")
+		//	maskband = nullptr;
+		//else
+		//{
+		//	mask_ds = gdal.Open(mask)
+		//	maskband = mask_ds.GetRasterBand(1)
+		//}
+
+		// Create output file if one is specified.
+
+		GDALDataset* dst_ds = nullptr;
+		if (dst_file.GetLength() > 0)
+		{
+			GDALDriver* pDriver = static_cast<GDALDriver*>(GDALGetDriverByName(format.c_str()));
+			assert(pDriver != nullptr);
+
+			// params: output file, src datasource, strict flag, options, progress...
+			dst_ds = pDriver->CreateCopy(dst_file.c_str(), src_ds, 0, nullptr, nullptr, nullptr);
+			assert(dst_ds != nullptr);
+
+			XString wkt = src_ds->GetProjectionRef();
+			if (wkt.GetLength() > 0)
+				dst_ds->SetProjection(wkt);
+
+			double geoTransform[6] = { 0 };
+			CPLErr err = src_ds->GetGeoTransform(geoTransform);
+			if (err == CPLErr::CE_None)
+				dst_ds->SetGeoTransform(geoTransform);
+
+			GDALRasterBand* pDestBand = dst_ds->GetRasterBand(1);
+
+			int success = 0;
+			double ndv = pSrcBand->GetNoDataValue(&success);
+			if (success)
+				pDestBand->SetNoDataValue(ndv);
+
+			GDALColorInterp color_interp = pSrcBand->GetColorInterpretation();
+			pDestBand->SetColorInterpretation(color_interp);
+			if (color_interp == GCI_PaletteIndex)
+			{
+				GDALColorTable* color_table = pSrcBand->GetColorTable();
+				pDestBand->SetColorTable(color_table);
+			}
+
+			char** fill_opts = nullptr;
+			
+			GDALRasterBandH hTargetBand = GDALRasterBand::ToHandle(pDestBand);
+			GDALRasterBandH hMaskBand = 0;
+
+			result = GDALFillNodata(
+				hTargetBand,			// hTargetBand -- the raster band to be modified in place. 
+				hMaskBand,				// hMaskBand -- mask band indicating pixels to be interpolated (zero valued). If hMaskBand is set to NULL, 
+										// this method will internally use the mask band returned by GDALGetMaskBand(hTargetBand). 
+				max_distance,			// dfMaxSearchDist -- the maximum number of pixels to search in all directions to find values to interpolate from. 
+				0,						// bDeprecatedOption -- unused argument, should be zero.
+				smooth_iterations,		// nSmoothingIterations -- the number of 3x3 smoothing filter passes to run(0 or more).
+				fill_opts,				// TEMP_FILE_DRIVER, NODATA, INTERPOLATION
+				nullptr,				// GDALProgressFunc --  progress function to report completion.
+				nullptr);				// void* pProgressArg -- callback data for progress function
+		}
+
+		GDALClose(src_ds);
+		GDALClose(dst_ds);
+		GDALClose(mask_ds);
+
+		return result;
 	}
 }

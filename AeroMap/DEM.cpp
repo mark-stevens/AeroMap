@@ -221,32 +221,53 @@ void DEM::create_dem(XString input_point_cloud, XString dem_type, std::vector<do
 	XString geotiff_path = XString::CombinePath(outdir, "tiles.tif");
 
 	// Build GeoTIFF
-	//kwargs = {
-	//    'max_memory': get_max_memory(),
-	//    'threads': max_workers if max_workers else 'ALL_CPUS',
-	//    'tiles_vrt': tiles_vrt_path,
-	//    'merged_vrt': merged_vrt_path,
-	//    'geotiff': geotiff_path,
-	//    'geotiff_tmp': geotiff_tmp_path,
-	//    'geotiff_small': geotiff_small_path,
-	//    'geotiff_small_filled': geotiff_small_filled_path
-	//}
 
-	//TODO:
-	// need gdal_fillnodata() for this
-	gapfill = false;
 	if (gapfill)
 	{
-		//# Sometimes, for some reason gdal_fillnodata.py
-		//# behaves strangely when reading data directly from a .VRT
-		//# so we need to convert to GeoTIFF first.
+		//TODO:
+		// can skip this now?
+		// Sometimes, for some reason gdal_fillnodata.py
+		// behaves strangely when reading data directly from a .VRT
+		// so we need to convert to GeoTIFF first.
+		
+		QStringList args;
+		args.push_back("-co");
+		if (max_workers > 0)
+			args.push_back(XString::Format("NUM_THREADS=%d", max_workers).c_str());
+		else
+			args.push_back("NUM_THREADS=ALL_CPUS");
+		args.push_back("-co");
+		args.push_back("BIGTIFF=IF_SAFER");
+		args.push_back("--config");
+		args.push_back("GDAL_CACHEMAX");
+		args.push_back("30%");						//TODO: get_max_memory(),
+		args.push_back(tiles_vrt_path.c_str());
+		args.push_back(geotiff_tmp_path.c_str());
+		AeroLib::RunProgramEnv(tree.prog_gdal_translate, args);
 		//run('gdal_translate '
 		//        '-co NUM_THREADS={threads} '
 		//        '-co BIGTIFF=IF_SAFER '
 		//        '--config GDAL_CACHEMAX {max_memory}% '
 		//        '"{tiles_vrt}" "{geotiff_tmp}"'.format(**kwargs))
 
-		//# Scale to 10% size
+		// Scale to 10% size
+		args.clear();
+		args.push_back("-co");
+		if (max_workers > 0)
+			args.push_back(XString::Format("NUM_THREADS=%d", max_workers).c_str());
+		else
+			args.push_back("NUM_THREADS=ALL_CPUS");
+		args.push_back("-co");
+		args.push_back("BIGTIFF=IF_SAFER");
+		args.push_back("--config");
+		args.push_back("GDAL_CACHEMAX");
+		args.push_back("30%");						//TODO: get_max_memory(),
+		args.push_back("-outsize");
+		args.push_back("10%");
+		args.push_back("0");
+		args.push_back(geotiff_tmp_path.c_str());
+		args.push_back(geotiff_small_path.c_str());
+		AeroLib::RunProgramEnv(tree.prog_gdal_translate, args);
 		//run('gdal_translate '
 		//    '-co NUM_THREADS={threads} '
 		//    '-co BIGTIFF=IF_SAFER '
@@ -254,7 +275,8 @@ void DEM::create_dem(XString input_point_cloud, XString dem_type, std::vector<do
 		//    '-outsize 10% 0 '
 		//    '"{geotiff_tmp}" "{geotiff_small}"'.format(**kwargs))
 
-		//# Fill scaled
+		// Fill scaled
+		AeroLib::gdal_fillnodata(geotiff_small_path, geotiff_small_filled_path, 100, 0, 1, "GTiff");
 		//gdal_fillnodata(['.',
 		//                '-co', 'NUM_THREADS=%s' % kwargs['threads'],
 		//                '-co', 'BIGTIFF=IF_SAFER',
@@ -264,8 +286,31 @@ void DEM::create_dem(XString input_point_cloud, XString dem_type, std::vector<do
 		//                kwargs['geotiff_small'], kwargs['geotiff_small_filled']])
 
 		// Merge filled scaled DEM with unfilled DEM using bilinear interpolation
+		args.clear();
+		args.push_back("-resolution");
+		args.push_back("highest");
+		args.push_back("-r");
+		args.push_back("bilinear");
+		args.push_back(merged_vrt_path.c_str());
+		args.push_back(geotiff_small_filled_path.c_str());
+		args.push_back(geotiff_tmp_path.c_str());
+		AeroLib::RunProgramEnv(tree.prog_gdal_buildvrt, args);
 		//run('gdalbuildvrt -resolution highest -r bilinear "%s" "%s" "%s"' % (merged_vrt_path, geotiff_small_filled_path, geotiff_tmp_path))
 
+		args.clear();
+		args.push_back("-co");
+		if (max_workers > 0)
+			args.push_back(XString::Format("NUM_THREADS=%d", max_workers).c_str());
+		else
+			args.push_back("NUM_THREADS=ALL_CPUS");
+		args.push_back("-co");
+		args.push_back("BIGTIFF=IF_SAFER");
+		args.push_back("--config");
+		args.push_back("GDAL_CACHEMAX");
+		args.push_back("30%");						//TODO: get_max_memory(),
+		args.push_back(merged_vrt_path.c_str());
+		args.push_back(geotiff_path.c_str());
+		AeroLib::RunProgramEnv(tree.prog_gdal_translate, args);
 		//run('gdal_translate '
 		//    '-co NUM_THREADS={threads} '
 		//    '-co TILED=YES '
@@ -312,12 +357,17 @@ void DEM::create_dem(XString input_point_cloud, XString dem_type, std::vector<do
 		AeroLib::Replace(geotiff_path, output_path);
 	}
 
-	//if os.path.exists(geotiff_tmp_path):
+	if (QFile::exists(geotiff_tmp_path.c_str()))
 	{
-		//    if not keep_unfilled_copy:
-		//        os.remove(geotiff_tmp_path)
-		//    else:
-		//        os.replace(geotiff_tmp_path, io.related_file_path(output_path, postfix=".unfilled"))
+		if (keep_unfilled_copy == false)
+		{
+			QFile::remove(geotiff_tmp_path.c_str());
+		}
+		else
+		{
+			XString related_file = AeroLib::related_file_path(output_path, "", ".unfilled");
+			AeroLib::Replace(geotiff_tmp_path, related_file);
+		}
 	}
 
 	//for cleanup_file in [tiles_vrt_path, tiles_file_list, merged_vrt_path, geotiff_small_path, geotiff_small_filled_path]:

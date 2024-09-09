@@ -34,6 +34,7 @@ DroneProcDlg::DroneProcDlg(QWidget* parent)
 	spinCrop->setValue(arg.crop);
 	spinDemResolution->setValue(arg.dem_resolution);
 	spinOrthoResolution->setValue(arg.orthophoto_resolution);
+	spinGapFill->setValue(arg.dem_gapfill_steps);
 	chkDSM->setChecked(arg.dsm);
 	chkDTM->setChecked(arg.dtm);
 
@@ -56,6 +57,7 @@ void DroneProcDlg::OnRun()
 	arg.crop = spinCrop->value();
 	arg.dem_resolution = spinDemResolution->value();
 	arg.orthophoto_resolution = spinOrthoResolution->value();
+	arg.dem_gapfill_steps = spinGapFill->value();
 	arg.dsm = chkDSM->isChecked();
 	arg.dtm = chkDTM->isChecked();
 

@@ -41,6 +41,10 @@ namespace AeroLib
 	void CreateFolder(XString path);
 	void DeleteFolder(XString path);
 	void Replace(XString src_file, XString dest_file);
+	XString related_file_path(XString input_file_path, XString prefix = "", XString postfix = "");
+
+	CPLErr gdal_fillnodata(XString src_file, XString dst_file, 
+		double max_distance = 100.0, int smooth_iterations = 0, int src_band = 1, XString format = "GTiff");
 }
 
 #endif // #ifndef AEROLIB_H

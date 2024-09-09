@@ -56,7 +56,7 @@
    <property name="geometry">
     <rect>
      <x>18</x>
-     <y>144</y>
+     <y>184</y>
      <width>81</width>
      <height>25</height>
     </rect>
@@ -69,7 +69,7 @@
    <property name="geometry">
     <rect>
      <x>72</x>
-     <y>148</y>
+     <y>188</y>
      <width>271</width>
      <height>17</height>
     </rect>
@@ -85,7 +85,7 @@
    <property name="geometry">
     <rect>
      <x>72</x>
-     <y>168</y>
+     <y>208</y>
      <width>271</width>
      <height>17</height>
     </rect>
@@ -103,7 +103,7 @@
      <x>16</x>
      <y>48</y>
      <width>129</width>
-     <height>16</height>
+     <height>17</height>
     </rect>
    </property>
    <property name="text">
@@ -111,6 +111,9 @@
    </property>
   </widget>
   <widget class="QDoubleSpinBox" name="spinCrop">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="geometry">
     <rect>
      <x>144</x>
@@ -148,7 +151,7 @@
      <x>16</x>
      <y>72</y>
      <width>129</width>
-     <height>16</height>
+     <height>17</height>
     </rect>
    </property>
    <property name="text">
@@ -183,7 +186,7 @@
      <x>16</x>
      <y>96</y>
      <width>129</width>
-     <height>16</height>
+     <height>17</height>
     </rect>
    </property>
    <property name="text">
@@ -212,12 +215,42 @@
     <double>0.000000000000000</double>
    </property>
   </widget>
+  <widget class="QSpinBox" name="spinGapFill">
+   <property name="geometry">
+    <rect>
+     <x>144</x>
+     <y>120</y>
+     <width>62</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of steps used to fill areas with gaps. Set to 0 to disable gap filling. Starting with a radius equal to the output resolution, N different DEMs are generated with progressively bigger radius using the inverse distance weighted (IDW) algorithm and merged together. Remaining gaps are then merged using nearest neighbor interpolation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_10">
+   <property name="geometry">
+    <rect>
+     <x>16</x>
+     <y>120</y>
+     <width>129</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Gap Fill Steps:</string>
+   </property>
+  </widget>
  </widget>
  <tabstops>
   <tabstop>cboInitStage</tabstop>
   <tabstop>spinCrop</tabstop>
   <tabstop>spinDemResolution</tabstop>
   <tabstop>spinOrthoResolution</tabstop>
+  <tabstop>spinGapFill</tabstop>
   <tabstop>chkDTM</tabstop>
   <tabstop>chkDSM</tabstop>
   <tabstop>cmdRun</tabstop>
