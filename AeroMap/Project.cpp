@@ -673,7 +673,7 @@ void Project::InitArg()
 	const unsigned int processor_count = std::thread::hardware_concurrency();
 	if (processor_count > 0)
 		arg.max_concurrency = processor_count;
-
+	Logger::Write(__FUNCTION__, "std::thread::hardware_concurrency(): %d", processor_count);
 	// --max-concurrency <positive integer>
 	//				The maximum number of processes to use in various processes. Peak memory requirement is ~1GB
 	//				per thread and 2 megapixel image resolution. Default: 16
