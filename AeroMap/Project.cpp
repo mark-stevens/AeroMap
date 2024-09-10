@@ -17,6 +17,8 @@
 #include <stdio.h>
 #include <assert.h>
 
+#include <thread>
+
 #include "AeroMap.h"
 #include "AeroLib.h"
 #include "TextFile.h"		// manage small text files
@@ -666,9 +668,12 @@ void Project::InitArg()
 	// --smrf-window <positive float>
 	//				Simple Morphological Filter window radius parameter (meters). Default: 18.0
 
-	//TODO:
-	//core count?
 	arg.max_concurrency = 16;
+	// may return 0 when not able to detect
+	const unsigned int processor_count = std::thread::hardware_concurrency();
+	if (processor_count > 0)
+		arg.max_concurrency = processor_count;
+
 	// --max-concurrency <positive integer>
 	//				The maximum number of processes to use in various processes. Peak memory requirement is ~1GB
 	//				per thread and 2 megapixel image resolution. Default: 16
