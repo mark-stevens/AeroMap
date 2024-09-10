@@ -403,6 +403,8 @@ void MainWindow::CreateToolBars()
 	mp_toolBarOrtho->addAction(mp_actionToolNone);
 	mp_toolBarOrtho->addAction(mp_actionToolViewZoomIn);
 	mp_toolBarOrtho->addAction(mp_actionToolViewZoomOut);
+	mp_toolBarOrtho->addAction(mp_actionToolDistance);
+	mp_toolBarOrtho->addAction(mp_actionToolArea);
 
 	mp_toolBarLidar = addToolBar(tr("Lidar Tools"));
 	mp_toolBarLidar->hide();
@@ -422,6 +424,7 @@ void MainWindow::CreateToolBars()
 	mp_toolBarTerrain->addWidget(mp_cboColorTerrain);
 
 	mp_toolBarFile->show();
+
 	mp_toolBarDrone->hide();
 	mp_toolBarOrtho->hide();
 	mp_toolBarLidar->hide();

@@ -62,6 +62,7 @@ void OrthoWindow::CreateScene()
 	m_scene.clear();
 
 	QBrush brushBack(SCENE_BACK_COLOR, Qt::SolidPattern);
+	m_scene.setBackgroundBrush(brushBack);
 
 	m_scene.addPixmap(m_pixmap);
 
@@ -108,6 +109,18 @@ void OrthoWindow::mouseDoubleClickEvent(QMouseEvent* event)
 
 	Q_UNUSED(event);
 
+	switch (GetApp()->m_Tool.GetTool()) {
+	case Tool::ToolType::Distance:
+		// basic way to stop measuring
+		GetApp()->m_Tool.Clear();
+		break;
+	case Tool::ToolType::Area:
+		GetApp()->m_Tool.Clear();
+		break;
+	default:
+		break;
+	}
+
 	update();
 }
 
@@ -132,8 +145,21 @@ void OrthoWindow::mousePressEvent(QMouseEvent* event)
 		m_ptAnchor.y = event->y();
 		break;
 	case Tool::ToolType::Distance:
+		//AddDistancePoint(pos);
 		break;
 	case Tool::ToolType::Area:
+		// start/stop area rect
+		//if (m_rctArea.x0 < 0)
+		//{
+		//	m_rctArea.x0 = event->x();
+		//	m_rctArea.y0 = event->y();
+		//	m_rctArea.x1 = event->x();
+		//	m_rctArea.y1 = event->y();
+		//}
+		//else
+		//{
+		//	m_rctArea.x0 = -1;
+		//}
 		break;
 	case Tool::ToolType::Volume:
 		break;
@@ -200,6 +226,25 @@ void OrthoWindow::mouseMoveEvent(QMouseEvent* event)
 
 		update();
 	}       // if left button
+	else if (event->buttons() == 0)
+	{
+		// no button depressed
+		switch (GetApp()->m_Tool.GetTool()) {
+		case Tool::ToolType::None:     // no tool selected
+			break;
+		case Tool::ToolType::Distance:
+			{
+				// in process of measuring distance
+				m_ptAnchor.x = event->x();
+				m_ptAnchor.y = event->y();
+			}
+			break;
+		case Tool::ToolType::Area:
+			//m_rctArea.x1 = event->x();
+			//m_rctArea.y1 = event->y();
+			break;
+		}
+	}
 
 	m_ptLastMouse.x = event->x();
 	m_ptLastMouse.y = event->y();
@@ -303,4 +348,38 @@ void OrthoWindow::ZoomOut()
 void OrthoWindow::ResetView()
 {
 	update();
+}
+
+int OrthoWindow::AddDistancePoint(VEC2& pos)
+{
+	mv_Distance.push_back(pos);
+	return static_cast<int>(mv_Distance.size());
+}
+
+int OrthoWindow::GetDistancePointCount() const
+{
+	return static_cast<int>(mv_Distance.size());
+}
+
+const VEC2 OrthoWindow::GetDistancePoint(unsigned int index)
+{
+	if (index < mv_Distance.size())
+		return mv_Distance[index];
+
+	return VEC2();
+}
+
+void OrthoWindow::ClearDistancePoints()
+{
+	return mv_Distance.clear();
+}
+
+double OrthoWindow::GetDistance(unsigned int index)
+{
+	// return distance from mv_Distance[index-1] to mv_Distance[index]
+
+	if (index > 0 && index < mv_Distance.size())
+		return (mv_Distance[index] - mv_Distance[index - 1]).Magnitude();
+
+	return 0.0;
 }

@@ -46,6 +46,8 @@ private:
 	PointType	m_ptLastMouse;		// last recorded mouse position
 	RectType   	m_rctSel;			// current 2d selection
 
+	std::vector<VEC2> mv_Distance;	// connected points defining distance measurement
+
 	QFont m_Font;
 
 	QMainWindow* mp_Parent;
@@ -54,8 +56,13 @@ private:
 
 	void CreateScene();
 
-	void SetBackColor(UInt8 R, UInt8 G, UInt8 B);
-	void GetBackColor(UInt8& R, UInt8& G, UInt8& B);
+	// measurement
+
+	int		AddDistancePoint(VEC2& pos);
+	int		GetDistancePointCount() const;
+	double	GetDistance(unsigned int index);
+	void	ClearDistancePoints();
+	const VEC2 GetDistancePoint(unsigned int index);
 };
 
 #endif // #ifndef ORTHOWINDOW_H
