@@ -2,17 +2,21 @@
 // Orthophoto window.
 //
 
+#include "TextFile.h"
+#include "MetaDataDlg.h"
 #include "MainWindow.h"
 #include "OrthoWindow.h"
 
 #include <QStatusBar>
-
-const int IMAGE_MARGIN = 12;	// spacing around image, pixels
+#include <QGraphicsLineItem>
 
 OrthoWindow::OrthoWindow(QWidget* parent)
 	: QGraphicsView(parent)
 	, mb_Selecting(false)
 	, mb_DebugInfo(true)
+	, mb_HaveExt(false)
+	, mp_actionClear(nullptr)
+	, mp_actionProp(nullptr)
 {
 	setAttribute(Qt::WA_DeleteOnClose);
 	setMinimumSize(90, 90);
@@ -23,6 +27,8 @@ OrthoWindow::OrthoWindow(QWidget* parent)
 	setMouseTracking(true);
 	setAcceptDrops(true);
 	grabKeyboard();
+
+	CreateActions();
 
 	// set up fonts
 
@@ -35,17 +41,18 @@ OrthoWindow::OrthoWindow(QWidget* parent)
 
 OrthoWindow::~OrthoWindow()
 {
-	m_scene.clear();
+	delete mp_actionClear;
+	delete mp_actionProp;
 
-	// clean up opengl state, other gl windows will
-	// re-inititialize it
-	GLManager::Shutdown();
+	m_scene.clear();
 }
 
 void OrthoWindow::CreateScene()
 {
 	// Recreate entire scene.
 	//
+
+	mb_HaveExt = false;
 
 	if (QFile::exists(tree.odm_orthophoto_tif.c_str()) == false)
 		return;
@@ -56,6 +63,33 @@ void OrthoWindow::CreateScene()
 		{
 			Logger::Write(__FUNCTION__, "Unable to load orthophoto file: '%s'", tree.odm_orthophoto_tif.c_str());
 			return;
+		}
+	}
+
+	GetApp()->LogWrite("Loading orthophoto...");
+
+	// these coordinate, in meters, are relative to the center of the scene, not utm coords
+	if (QFile::exists(tree.odm_orthophoto_corners.c_str()) == false)
+	{
+		Logger::Write(__FUNCTION__, "Unable to load orthophoto extents: '%s'", tree.odm_orthophoto_corners.c_str());
+	}
+	else
+	{
+		TextFile textFile(tree.odm_orthophoto_corners.c_str());
+		XString line = textFile.GetLine(0).c_str();
+		int token_count = line.Tokenize(" \t");
+		if (token_count < 4)
+		{
+			Logger::Write(__FUNCTION__, "Unable to parse orthophoto extents: '%s'", line.c_str());
+		}
+		else
+		{
+			m_Extent.x0 = line.GetToken(0).GetDouble();
+			m_Extent.x1 = line.GetToken(2).GetDouble();
+			m_Extent.y0 = line.GetToken(1).GetDouble();
+			m_Extent.y1 = line.GetToken(3).GetDouble();
+
+			mb_HaveExt = true;
 		}
 	}
 
@@ -71,6 +105,19 @@ void OrthoWindow::CreateScene()
 
 	setScene(&m_scene);
 	setMouseTracking(true);
+
+	GetApp()->LogWrite("Orthophoto loaded");
+}
+
+void OrthoWindow::CreateActions()
+{
+	mp_actionClear = new QAction(QIcon(""), tr("Clear"), this);
+	mp_actionClear->setStatusTip(tr("Clear edit artifacts"));
+	connect(mp_actionClear, SIGNAL(triggered()), this, SLOT(OnClear()));
+
+	mp_actionProp = new QAction(QIcon(""), tr("Properties"), this);
+	mp_actionProp->setStatusTip(tr("Show properties"));
+	connect(mp_actionProp, SIGNAL(triggered()), this, SLOT(OnProp()));
 }
 
 void OrthoWindow::showEvent(QShowEvent* event)
@@ -137,6 +184,8 @@ void OrthoWindow::mousePressEvent(QMouseEvent* event)
 	// the window. For other widget types it does nothing.
 	//
 
+	PointD pt_m = PixelToMeters(event->x(), event->y());
+
 	switch (GetApp()->m_Tool.GetTool()) {
 	case Tool::ToolType::Select:
 	case Tool::ToolType::ViewZoom:
@@ -145,7 +194,7 @@ void OrthoWindow::mousePressEvent(QMouseEvent* event)
 		m_ptAnchor.y = event->y();
 		break;
 	case Tool::ToolType::Distance:
-		//AddDistancePoint(pos);
+		AddDistancePoint(pt_m);
 		break;
 	case Tool::ToolType::Area:
 		// start/stop area rect
@@ -171,6 +220,9 @@ void OrthoWindow::mousePressEvent(QMouseEvent* event)
 
 	m_ptLastMouse.x = event->x();  // last recorded mouse position
 	m_ptLastMouse.y = event->y();
+
+	XString str = XString::Format("Meters: %0.1f, %0.1f", pt_m.x, pt_m.y);
+	mp_Parent->statusBar()->showMessage(str.c_str());
 }
 
 void OrthoWindow::mouseReleaseEvent(QMouseEvent* /* event */)
@@ -210,6 +262,8 @@ void OrthoWindow::mouseMoveEvent(QMouseEvent* event)
 	// implementation of mouseMoveEvent().
 	//
 
+	PointD pt_m = PixelToMeters(event->x(), event->y());
+
 	if (event->buttons() & Qt::LeftButton)		// left button is depressed
 	{
 		switch (GetApp()->m_Tool.GetTool()) {
@@ -248,6 +302,10 @@ void OrthoWindow::mouseMoveEvent(QMouseEvent* event)
 
 	m_ptLastMouse.x = event->x();
 	m_ptLastMouse.y = event->y();
+
+	PointType pt_pix = MetersToPixel(pt_m.x, pt_m.y);
+	XString str = XString::Format("Meters: %0.1f, %0.1f  Pixel: %d, %d  Calc Pixel: %d, %d", pt_m.x, pt_m.y, event->x(), event->y(), pt_pix.x, pt_pix.y);
+	mp_Parent->statusBar()->showMessage(str.c_str());
 }
 
 void OrthoWindow::wheelEvent(QWheelEvent* event)
@@ -331,6 +389,11 @@ void OrthoWindow::keyReleaseEvent(QKeyEvent* event)
 void OrthoWindow::contextMenuEvent(QContextMenuEvent* event)
 {
 	Q_UNUSED(event);
+
+	QMenu menu(this);
+	menu.addAction(mp_actionClear);
+	menu.addAction(mp_actionProp);
+	menu.exec(event->globalPos());
 }
 
 void OrthoWindow::ZoomIn()
@@ -350,36 +413,171 @@ void OrthoWindow::ResetView()
 	update();
 }
 
-int OrthoWindow::AddDistancePoint(VEC2& pos)
+int OrthoWindow::AddDistancePoint(VEC2 pos_m)
 {
-	mv_Distance.push_back(pos);
-	return static_cast<int>(mv_Distance.size());
+	m_DistancePts.push_back(pos_m);
+	if (m_DistancePts.size() > 1)
+	{
+		// add visual for new line segment
+		int pts = GetDistancePointCount();
+
+		PointType pt0 = MetersToImage(m_DistancePts[pts - 2].x, m_DistancePts[pts - 2].y);
+		PointType pt1 = MetersToImage(m_DistancePts[pts - 1].x, m_DistancePts[pts - 1].y);
+
+		// width of this line can't be fixed - think needs to be relative to image scale?
+		QPen penLine(QColor(1, 1, 255), 25, Qt::SolidLine);
+		// these seem to be in the units of the original image
+		QGraphicsLineItem* pLine = m_scene.addLine(pt0.x, pt0.y, pt1.x, pt1.y, penLine);
+		pLine->show();
+		m_ItemList.push_back(pLine);	// add items to list so we can clear them without clearing entire scene
+
+		// get current scale factor
+		double sf = transform().m11();
+
+		double d = GetDistance(pts - 1);
+		XString str = XString::Format("%0.1f m", d);
+		QGraphicsTextItem* pItem = m_scene.addText(str.c_str(), m_Font);
+		m_ItemList.push_back(pItem);
+		pItem->setScale(1.0 / sf);			// reverse scale factor or get tiny text
+		pItem->moveBy(pt1.x, pt1.y);		// move to end of current line
+	}
+
+	return static_cast<int>(m_DistancePts.size());
+}
+
+int OrthoWindow::AddDistancePoint(PointD pos_m)
+{
+	return AddDistancePoint(VEC2(pos_m.x, pos_m.y));
 }
 
 int OrthoWindow::GetDistancePointCount() const
 {
-	return static_cast<int>(mv_Distance.size());
+	return static_cast<int>(m_DistancePts.size());
 }
 
-const VEC2 OrthoWindow::GetDistancePoint(unsigned int index)
+VEC2 OrthoWindow::GetDistancePoint(unsigned int index)
 {
-	if (index < mv_Distance.size())
-		return mv_Distance[index];
+	if (index < m_DistancePts.size())
+		return m_DistancePts[index];
 
 	return VEC2();
 }
 
 void OrthoWindow::ClearDistancePoints()
 {
-	return mv_Distance.clear();
+	return m_DistancePts.clear();
 }
 
 double OrthoWindow::GetDistance(unsigned int index)
 {
-	// return distance from mv_Distance[index-1] to mv_Distance[index]
+	// return distance from m_DistancePts[index-1] to m_DistancePts[index]
 
-	if (index > 0 && index < mv_Distance.size())
-		return (mv_Distance[index] - mv_Distance[index - 1]).Magnitude();
+	if (index > 0 && index < m_DistancePts.size())
+		return (m_DistancePts[index] - m_DistancePts[index - 1]).Magnitude();
 
 	return 0.0;
 }
+
+PointD OrthoWindow::PixelToMeters(int x, int y)
+{
+	PointD pt;
+	
+	QPointF pt_scene = mapToScene(QPoint(x, y));
+	if (pt_scene.x() > 0.0 && pt_scene.x() < m_scene.width())
+	{
+		if (pt_scene.y() > 0.0 && pt_scene.y() < m_scene.height())
+		{
+			double w = m_scene.width();
+			double h = m_scene.height();
+
+			double dx = (double)pt_scene.x() / w;
+			double dy = 1.0 - (double)pt_scene.y() / h;
+
+			pt.x = m_Extent.x0 + dx * m_Extent.DX();
+			pt.y = m_Extent.y0 + dy * m_Extent.DY();
+		}
+	}
+
+	return pt;
+}
+
+PointType OrthoWindow::MetersToPixel(double x, double y)
+{
+	// Map coordinates in meters to screen pixels.
+	//
+
+	PointType pt;
+
+	if (m_Extent.Contains(x, y))
+	{
+		// bounds of scaled image, pixels
+		QPolygon scene_poly = mapFromScene(sceneRect());
+		int scene_x0 = scene_poly[0].x();
+		int scene_x1 = scene_poly[1].x();
+		int scene_y0 = scene_poly[1].y();
+		int scene_y1 = scene_poly[2].y();
+
+		double dx = (x - m_Extent.x0) / m_Extent.DX();
+		double dy = 1.0 - (y - m_Extent.y0) / m_Extent.DY();
+
+		pt.x = scene_x0 + dx * (scene_x1 - scene_x0 + 1);
+		pt.y = scene_y0 + dy * (scene_y1 - scene_y0 + 1);
+	}
+
+	return pt;
+}
+
+PointType OrthoWindow::MetersToImage(double x, double y)
+{
+	// Map coordinates in meters to image pixels.
+	//
+
+	PointType pt;
+
+	if (m_Extent.Contains(x, y))
+	{
+		// size of image, pixels
+		QRectF scene_rect = sceneRect();
+
+		double dx = (x - m_Extent.x0) / m_Extent.DX();
+		double dy = 1.0 - (y - m_Extent.y0) / m_Extent.DY();
+
+		pt.x = scene_rect.x() + dx * scene_rect.width();
+		pt.y = scene_rect.y() + dy * scene_rect.height();
+	}
+
+	return pt;
+}
+
+void OrthoWindow::OnClear()
+{
+	// Clear editing artifacts.
+
+	for (QGraphicsItem* pItem : m_ItemList)
+	{
+		m_scene.removeItem(pItem);
+		delete pItem;
+	}
+	m_ItemList.clear();
+
+	ClearDistancePoints();
+	mb_Selecting = false;
+	GetApp()->m_Tool.Clear();
+
+	update();
+}
+
+void OrthoWindow::OnProp()
+{
+	MetaDataDlg dlg(this, "Properties");
+
+	XString meta = XString::Format("File Name: %s\n", tree.odm_orthophoto_tif.c_str());
+	meta += XString::Format("Extents\n");
+	meta += XString::Format("    X: %0.3f - %0.3f\n", m_Extent.x0, m_Extent.x1);
+	meta += XString::Format("    Y: %0.3f - %0.3f\n", m_Extent.y0, m_Extent.y1);
+	meta += XString::Format("Image Size: %dx%d\n", m_pixmap.width(), m_pixmap.height());
+
+	dlg.SetMetaData(meta);
+	dlg.exec();
+}
+
