@@ -13,21 +13,10 @@
 #include "TextureGL.h"			// OpenGL texture class
 #include "Sphere.h"				// OpenGL sphere class
 #include "SkyBox.h"				// SkyBox class
-//#include "WaterFrameBuffer.h"	// frame buffer manager for water rendering
 #include "Terrain.h"			// base class
 
 class TerrainGL : public Terrain
 {
-public:
-
-	enum class WaterMode
-	{
-		Surface,	// render a flat surface
-		Floor,		// render the floor (no water)
-		Real,		// use water shader for realistic water
-		Ex			// use experimental water shaders
-	};
-
 public:
 
 	TerrainGL(const char* mapFolder);
@@ -60,13 +49,6 @@ public:
 
 	void SetRenderSky(SkyBox::Mode mode);
 	SkyBox::Mode GetRenderSky();
-
-	void SetWaterMode(WaterMode mode);
-	WaterMode GetWaterMode();
-	double GetWaterElev();
-	void SetWaterElev(double elev);
-	vec3 GetWaterColor();
-	void SetWaterColor(double r, double g, double b);
 
 	Light& GetLight() { return m_Light; }
 
@@ -121,15 +103,9 @@ private:
 
 	TextureGL m_texTerrain;				// terrain texture
 	ShaderGL m_shaderTerrain;			// terrain shader
-	ShaderGL m_shaderWater;
-	ShaderGL m_shaderWaterJC;			// water shader, jay conrod algorithm
 
 	VertexBufferGL m_vbCubePC;			// reusable cube PC buffer
 	VertexBufferGL m_vbSkirtPNC;		// vertex buffer for rendering skirting around sides
-	VertexBufferGL m_vbWater;			// single global water vb
-	VertexBufferGL m_vbWaterHi;			// high resolution water vb
-
-	//WaterFrameBuffer* mp_WaterFBO;
 
 	SkyBox m_SkyBox;
 
@@ -137,11 +113,6 @@ private:
 	Sphere m_SphereLight;				// light control sphere
 	Material m_Material;				// primary terrain material
 	Material m_MatSkirt;				// terrain skirt material
-	double mf_WaterElev;				// assumed single elevation for water surface
-	vec3 m_WaterColor;
-	double m_SimTime;					// current sim time, seconds
-	WaterMode m_WaterMode;
-	bool mb_WaterProp;					// true => water properties need updating
 
 	// render switches
 
@@ -159,8 +130,6 @@ private:
 	void RenderScene(glm::mat4& matModel, glm::mat4& matView, glm::mat4& matProj, vec4& clipPlane);
 	void RenderSkirt();
 	void RenderTile(TileType* pTile);
-	//void RenderWater(glm::mat4& matModel, glm::mat4& matView, glm::mat4& matProj, Camera& camera, double nearPlane, double farPlane);
-	//void RenderWaterJC(glm::mat4& matModel, glm::mat4& matView, glm::mat4& matProj, Camera& camera);
 
 	void LoadTerrain();
 	void LoadTile(TileType* pTile, UInt32 tileRow, UInt32 tileCol);
@@ -168,8 +137,6 @@ private:
 	void LoadSkirt();
 	VEC3 CalcVertexNormal(int vxRow, int vxCol);
 	bool OnEdge(int vxRow, int vxCol);
-	//void CreateWaterBuffer();
-	//void CreateWaterBufferHi();
 
 	const unsigned int GetTileRowCount() { return GetRowCount() / TILE_SIZE; }
 	const unsigned int GetTileColCount() { return GetColCount() / TILE_SIZE; }

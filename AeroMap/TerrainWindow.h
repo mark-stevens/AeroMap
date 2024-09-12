@@ -40,13 +40,6 @@ public:
 
 	void SetColorScale(const char* scaleFile);
 
-	void SetWaterMode(TerrainGL::WaterMode mode);
-	TerrainGL::WaterMode GetWaterMode();
-
-	// simulation
-	void Run();
-	void Stop();
-
 protected:
 
 	// QGLWidget
@@ -95,7 +88,6 @@ private:
 
 	Camera m_Camera;				// 3D camera
 	QFont m_Font;					// default font
-	QTimer m_timerSim;				// simulation timer
 
 	ShaderGL m_shaderPNT;			// shader program for PNT type vertices
 	ShaderGL m_shaderPNC;			// shader program for PNC type vertices
@@ -151,10 +143,6 @@ private:
 	QAction* mp_actionFillSolid;
 	QAction* mp_actionFillWire;
 
-	QAction* mp_actionWaterReal;
-	QAction* mp_actionWaterSurface;
-	QAction* mp_actionWaterFloor;
-
 	QAction* mp_actionRenderAxes;
 	QAction* mp_actionRenderDim;
 	QAction* mp_actionRenderLights;
@@ -168,8 +156,6 @@ private:
 
 	MainWindow* mp_Parent;
 	ProfileWindow* mp_ProfileWindow;
-
-	ImageFile m_imgWaterBed;		// water bed texture
 
 private slots:
 
@@ -192,11 +178,8 @@ private slots:
 
 	void OnClear();
 
-	void OnTimeout();
-
 private:
 
-	void RenderLake(QPainter* pPainter);
 	void RenderArea(QPainter* pPainter);
 	void RenderDistance(QPainter* pPainter);
 	void RenderDimensions();
@@ -213,7 +196,6 @@ private:
 	AXIS ViewToAxis(View viewId);
 	void SetupMatrices();
 	bool InitializeShaders();
-	void Update3DCameraHeight();
 	void UpdateOrthoScale();
 	void PushText(int x, int y, const char* text);
 	double GetMinViewHeight();
@@ -225,19 +207,10 @@ private:
 	void CreateActions();
 
 	// terrain modification functions
-	void CreateLake(double depth);
 	void Excavate(RectType rectPix);
-	void FloodFillWater(int row, int col);
 	void Route(int startX, int startY, int endX, int endY);
-	void TexPaint(int startX, int startY, int endX = -1, int endY = -1);
 	void ChangeElevation(double delta, double scaleFactor, bool isDelta);
 	void SmoothElevation();
-
-	void SetWaterDepthGeoTIFF(const char* srcFile);					// set depth for all water points using geotiff file
-	void SetWaterDepthLatLon(const char* srcFile, bool revLL);		// set depth for all water points using text file (lat/lon/depth)
-	void SetWaterDepthXY(const char* srcFile, bool revXY);			// set depth for all water points using text file (x/y/depth)
-
-	double LookupDepth(FILE* pDepthFile, double val0, double val1);
 };
 
 #endif // #ifndef TERRAINWINDOW_H

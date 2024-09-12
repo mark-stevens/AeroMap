@@ -33,12 +33,6 @@ public:
 
 	static const char* GetVertexShaderTerrain();
 	static const char* GetFragmentShaderTerrain();
-
-	static const char* GetVertexShaderWater();
-	static const char* GetFragmentShaderWater();
-
-	static const char* GetVertexShaderWaterJC();
-	static const char* GetFragmentShaderWaterJC();
 };
 
 #endif // #ifndef SHADERLIB_H

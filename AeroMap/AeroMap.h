@@ -39,6 +39,9 @@
 #define CONTOUR_START_KEY		"ContourStart"
 #define CONTOUR_COLOR_KEY		"ContourColor"
 
+#define LAST_TERRAIN_SCALE_KEY	"TerrainScale"
+#define LAST_LIDAR_SCALE_KEY	"LidarScale"
+
 #define SCENE_BACK_COLOR QColor(0xF0, 0xF0, 0xFF)	// default background color for graphics scenes
 
 // connection macro for the following overload that:

@@ -40,7 +40,7 @@ TerrainWindow::TerrainWindow(QWidget* parent, const char* fileName)
 	, mp_actionRenderTileInfo(nullptr)
 	, mp_actionClear(nullptr)
 	, m_FillMode(FILL_MODE::Solid)
-	, m_ViewID(View::Top)
+	, m_ViewID(View::ThreeD)
 	, mb_View(true)
 	, mp_ProfileWindow(nullptr)
 	, m_FrameBuffer(-1)
@@ -61,8 +61,6 @@ TerrainWindow::TerrainWindow(QWidget* parent, const char* fileName)
 	mf_Height = 1000.0;
 
 	m_rctArea.x0 = -1;
-
-	//m_imgWaterBed.LoadFile(GetApp()->GetWaterBedTextureFile().c_str());
 
 	InitQuad(m_colorTEXT, 0.9F, 0.9F, 0.9F);
 
@@ -120,10 +118,8 @@ void TerrainWindow::paintGL()
 	GLManager::CheckForOpenGLError(__FILE__, __LINE__);
 
 	QPainter painter;
-
 	if (!painter.begin(this))
 		assert(false);
-
 	painter.beginNativePainting();
 
 	m_winSize.cx = width();
@@ -153,7 +149,13 @@ void TerrainWindow::paintGL()
 			mp_Terrain = new TerrainGL(ms_FileName.c_str());
 			// keep a singleton ptr to the base class for application-wide access
 			//GetApp()->SetTerrain(dynamic_cast<Terrain*>(mp_Terrain));
-			OnViewTop();
+
+			QSettings settings(ORG_KEY, APP_KEY);
+			XString scaleFile = settings.value(LAST_TERRAIN_SCALE_KEY, "").toString();
+			if (scaleFile.GetLength() > 0)
+				SetColorScale(scaleFile.c_str());
+
+			OnView3D();
 			GLManager::CheckForOpenGLError(__FILE__, __LINE__);
 		}
 	}
@@ -678,64 +680,6 @@ void TerrainWindow::Route(int startX, int startY, int endX, int endY)
 	update();
 }
 
-void TerrainWindow::TexPaint(int startX, int startY, int endX, int endY)
-{
-	// Paint with texture.
-	//
-	// Applies paint to line from (startX,startY) to (endX,endY)
-	//
-	// Inputs:
-	//		(startX,startY) = line start point, pixel coordinates
-	//		(endX,endY) = line end point, pixel coordinates
-
-	int startRow, startCol;		// line endpoints, terrain row/col
-	int endRow, endCol;
-	PixelToTerrainRowCol(startX, startY, startRow, startCol);
-	PixelToTerrainRowCol(endX, endY, endRow, endCol);
-
-	// radius of tool, terrain data points
-	int sizePts = static_cast<int>(GetApp()->m_Tool.GetMaskSize() / 2);
-
-	std::vector<PointType> ptList;
-	if (endX > -1)
-		Bresenham(startCol, startRow, endCol, endRow, ptList);
-	else
-		ptList.push_back(PointType(startX, startY));
-
-	// for each pixel from last mouse pos to here
-	for (unsigned int i = 0; i < ptList.size(); ++i)
-	{
-		double worldX, worldY;
-		RectType rect;
-
-		// tool center point
-		mp_Terrain->RowColToXY(ptList[i].y, ptList[i].x, worldX, worldY);
-
-		rect.y0 = ptList[i].y - sizePts;
-		rect.x0 = ptList[i].x - sizePts;
-		rect.y1 = ptList[i].y + sizePts;
-		rect.x1 = ptList[i].x + sizePts;
-
-		for (int r = rect.y0; r <= rect.y1; ++r)
-		{
-			for (int c = rect.x0; c <= rect.x1; ++c)
-			{
-				if ((r >= 0 && r < (int)mp_Terrain->GetRowCount()) && (c >= 0 && c < (int)mp_Terrain->GetColCount()))
-				{
-					int mr = r - rect.y0;
-					int mc = c - rect.x0;
-					PixelType pix = GetApp()->m_Tool.GetPixel(mr, mc);
-					mp_Terrain->SetPixel(mc, mr, pix);
-				}
-			}
-		}
-
-		//mp_Terrain->Rebuild(rect);
-	}
-
-	update();
-}
-
 void TerrainWindow::ShowPathProfile()
 {
 	// Show path profile window.
@@ -878,13 +822,6 @@ void TerrainWindow::mousePressEvent(QMouseEvent* event)
 				m_rctArea.x0 = -1;
 			}
 			break;
-		case Tool::ToolType::WaterFill:
-			// set to water
-			FloodFillWater(row, col);
-			GetApp()->m_Tool.Clear();
-			break;
-		case Tool::ToolType::TexPaint:
-			TexPaint(event->x(), event->y());
 		case Tool::ToolType::Volume:
 			break;
 		case Tool::ToolType::Profile:
@@ -1202,7 +1139,6 @@ void TerrainWindow::wheelEvent(QWheelEvent* event)
 							m_Camera.MoveForward(factor);
 						else
 							m_Camera.MoveBackward(factor);
-						Update3DCameraHeight();
 						break;
 					}
 				case View::Top:
@@ -1416,24 +1352,6 @@ void TerrainWindow::SetupMatrices()
 
 	m_shaderPC.SetUniform("MVP", m_matProjection * mv);
 	m_shaderPCT.SetUniform("MVP", m_matProjection * mv);
-}
-
-void TerrainWindow::Update3DCameraHeight()
-{
-	// Keep the 3D camera on the surface without cutting
-	// into terrain.
-	//
-
-	double height = 0.0;
-
-	// if camera over terrain (else just use 0)
-	if ((m_Camera.GetPos().x > 0.0 && m_Camera.GetPos().x < mp_Terrain->GetSizeX())
-		&& (m_Camera.GetPos().y > 0.0 && m_Camera.GetPos().y < mp_Terrain->GetSizeY()))
-	{
-		height = mp_Terrain->GetHeightNormal(m_Camera.GetPos().x, m_Camera.GetPos().y);
-	}
-
-	m_Camera.SetZ(height + fabs(height) * 0.25);
 }
 
 void TerrainWindow::UpdateOrthoScale()
@@ -1789,319 +1707,11 @@ void TerrainWindow::ChangeElevation(double delta, double scaleFactor, bool isDel
 	GetApp()->LogWrite(__FUNCTION__, "Elevation complete");
 }
 
-void TerrainWindow::FloodFillWater(int row, int col)
-{
-	// Use flood fill algorithm to fill flat region with
-	// water type points.
-	//
-
-	//WaterDlg dlg(this);
-	//if (dlg.exec() == QDialog::Accepted)
-	//{
-	//	MarkLib::PerfTimer(true);
-	//	GetApp()->LogWrite(__FUNCTION__, "Filling region with water ...");
-
-	//	//double depthScale = dlg.GetDepthScale();
-	//	int elevTolerance = dlg.GetElevTolerance();
-
-	//	// call recursive floodfill algorithm
-	//	int waterPoints = mp_Terrain->FillWater(row, col, elevTolerance);
-
-	//	if (dlg.GetSetDepth() == true)
-	//	{
-	//		GetApp()->LogWrite(__FUNCTION__, "Setting water depth ...");
-
-	//		if (dlg.GetDepthFile().IsEmpty() == false)
-	//		{
-	//			switch (dlg.GetDepthType()) {
-	//			case WaterDlg::DepthType::LatLonDepth:
-	//				SetWaterDepthLatLon(dlg.GetDepthFile().c_str(), false);
-	//				break;
-	//			case WaterDlg::DepthType::LonLatDepth:
-	//				SetWaterDepthLatLon(dlg.GetDepthFile().c_str(), true);
-	//				break;
-	//			case WaterDlg::DepthType::XYDepth:
-	//				SetWaterDepthXY(dlg.GetDepthFile().c_str(), false);
-	//				break;
-	//			case WaterDlg::DepthType::YXDepth:
-	//				SetWaterDepthLatLon(dlg.GetDepthFile().c_str(), true);
-	//				break;
-	//			default:
-	//				assert(false);
-	//				break;
-	//			}
-	//		}
-	//	}
-
-	//	// update the texture
-
-	//	GetApp()->LogWrite(__FUNCTION__, "Updating water texture ...");
-
-	//	int texScale = mp_Terrain->GetTextureScale();
-	//	SizeType texSize = mp_Terrain->GetTextureDim();
-
-	//	for (int x = 0; x < mp_Terrain->GetColCount()*texScale; ++x)
-	//	{
-	//		for (int y = 0; y < mp_Terrain->GetRowCount()*texScale; ++y)
-	//		{
-	//			int row = mp_Terrain->GetRowCount() - (y / texScale) - 1;
-	//			int col = x / texScale;
-	//			if (mp_Terrain->IsWater(row, col))
-	//			{
-	//				mp_Terrain->SetPixel(x, y, ScaleColor::GetDefaultWaterColor());
-	//			}
-	//		}
-	//	}
-
-	//	mp_Terrain->Rebuild();					// update the TerrainGL render buffers
-	//	update();								// schedule opengl update
-
-	//	double s = MarkLib::PerfTimer();
-	//	GetApp()->LogWrite(__FUNCTION__, "Water fill complete, %d points set (%0.2fs).", waterPoints, s);
-	//}
-}
-
 void TerrainWindow::ResetView()
 {
 	// Reset to base map view, centered.
 
 	OnViewTop();
-}
-
-void TerrainWindow::SetWaterDepthLatLon(const char* srcFile, bool revLL)
-{
-	// Set depth value for all water points.
-	//
-	// Can be quite slow, but once set, there's normally no need
-	// to re-set them.
-	//
-	// Inputs:
-	//		srcFile = text file containing lines in [lat,lon,depth] format
-	//		revLL	= first 2 parms are lon/lat, else lat/lon
-	//
-
-	FILE* pDepthFile = fopen(srcFile, "rt");
-	if (pDepthFile == nullptr)
-	{
-		Logger::Write(__FUNCTION__, "Unable to open depth file: %s", srcFile);
-		return;
-	}
-	
-	// set depth using "dense" file (multiple depth values per 
-	// water vertex)
-	int last_row = -1;
-	int last_col = -1;
-	int point_count = 0;
-	char buf[128] = { 0 };
-	while (!feof(pDepthFile))
-	{
-		fgets(buf, _countof(buf), pDepthFile);
-
-		XString str = buf;
-		str.TruncateAt('#');
-		int tokenCount = str.Tokenize(", ");
-		if (tokenCount == 3)
-		{
-			// default to lat/lon ordering
-			double lat = str.GetToken(0).GetDouble();
-			double lon = str.GetToken(1).GetDouble();
-			if (revLL)
-				std::swap(lat, lon);
-
-			int row = 0;
-			int col = 0;
-
-			// seems to be an acceptable approximation - just get any
-			// depth at (row,col); the ideal might be to average all depths
-			// at (row,col), but they are not contiguous 
-			mp_Terrain->LLToRowCol(lat, lon, row, col);
-			if ((row != last_row) || (col != last_col))
-			{
-				//fprintf(pWorkFile, "%4d %4d %0.2f\n", row, col, str.GetToken(2).GetDouble());
-				last_row = row;
-				last_col = col;
-
-				mp_Terrain->SetDepth(row, col, str.GetToken(2).GetDouble());
-				++point_count;
-			}
-		}
-	}
-
-	fclose(pDepthFile);
-	mp_Terrain->UpdateHeightRange();
-}
-
-void TerrainWindow::SetWaterDepthXY(const char* srcFile, bool revXY)
-{
-	// Set depth value for all water points.
-	//
-	// Can be quite slow, but once set, there's normally no need
-	// to re-set them.
-	//
-	// Inputs:
-	//		srcFile = text file containing lines in [lat,lon,depth] format
-	//		revXY	= first 2 parms are x/y, else y/x
-	//
-
-	FILE* pDepthFile = fopen(srcFile, "rt");
-	if (pDepthFile == nullptr)
-	{
-		Logger::Write(__FUNCTION__, "Unable to open depth file: %s", srcFile);
-		return;
-	}
-
-	// set depth using "dense" file (multiple depth values per 
-	// water vertex)
-	int last_row = -1;
-	int last_col = -1;
-	int point_count = 0;
-	char buf[128] = { 0 };
-	while (!feof(pDepthFile))
-	{
-		fgets(buf, _countof(buf), pDepthFile);
-
-		XString str = buf;
-		str.TruncateAt('#');
-		int tokenCount = str.Tokenize(", ");
-		if (tokenCount == 3)
-		{
-			// default to lat/lon ordering
-			double x = str.GetToken(0).GetDouble();
-			double y = str.GetToken(1).GetDouble();
-			if (revXY)
-				std::swap(x, y);
-
-			int row = 0;
-			int col = 0;
-
-			// seems to be an acceptable approximation - just get any
-			// depth at (row,col); the ideal might be to average all depths
-			// at (row,col), but they are not contiguous 
-			mp_Terrain->XYToRowCol(x, y, row, col);
-			if ((row != last_row) || (col != last_col))
-			{
-				//fprintf(pWorkFile, "%4d %4d %0.2f\n", row, col, str.GetToken(2).GetDouble());
-				last_row = row;
-				last_col = col;
-
-				mp_Terrain->SetDepth(row, col, str.GetToken(2).GetDouble());
-				++point_count;
-			}
-		}
-	}
-
-	fclose(pDepthFile);
-	mp_Terrain->UpdateHeightRange();
-}
-
-void TerrainWindow::SetWaterDepthGeoTIFF(const char* srcFile)
-{
-	// Read depth information from a GeoTIFF file which is assumed
-	// to be WGS84.
-	//
-	// If you are doing a large area, like Crete, this process will need
-	// to re-run for each 1x1 deg input geotiff
-
-	RasterFile* pRaster = new RasterFile(srcFile, true);
-	assert(pRaster->IsGeographic());
-
-	for (int row = 0; row < mp_Terrain->GetRowCount(); ++row)
-	{
-		GetApp()->LogWrite("", "Row %d/%d", row, mp_Terrain->GetRowCount());
-		for (int col = 0; col < mp_Terrain->GetColCount(); ++col)
-		{
-			if (mp_Terrain->IsWater(row, col))
-			{
-				double lat = 0.0;
-				double lon = 0.0;
-				mp_Terrain->RowColToLL(row, col, lat, lon);
-
-				double depth = pRaster->GetHeight(lon, lat);
-
-				mp_Terrain->SetDepth(row, col, depth);
-			}
-		}
-	}
-
-	delete pRaster;
-}
-
-double TerrainWindow::LookupDepth(FILE* pDepthFile, double x, double y)
-{
-	// Lookup value in depth file.
-	//
-	// Inputs:
-	//		pDepthFile = text file with 3 entries per line (coord0,coord1,depth)
-	//		x/y = lon/lat or x/y depending on type of file
-	// Outputs:
-	//		return = depth at point closest to given coordinates
-	//
-
-	assert(pDepthFile != nullptr);
-
-	double depth = 0.0;
-
-	double dist = 1E12;
-	double dist_min = 1E12;
-	char buf[100] = { 0 };
-
-	int line_ctr = 0;
-	fseek(pDepthFile, 0, SEEK_SET);
-	while (!feof(pDepthFile))
-	{
-		fgets(buf, _countof(buf), pDepthFile);
-
-		XString str = buf;
-		str.TruncateAt('#');
-		int tokenCount = str.Tokenize(", ");
-		if (tokenCount == 3)
-		{
-			double in_x = str.GetToken(0).GetDouble();
-			double in_y = str.GetToken(1).GetDouble();
-			double in_d = str.GetToken(2).GetDouble();
-
-			dist = (x - in_x) * (x - in_x) + (y - in_y) * (y - in_y);
-			if (dist < dist_min)
-			{
-				 // we're closer, update depth & distance
-				dist_min = dist;
-				depth = in_d;
-			}
-
-			// if i start getting far away, can i stop?
-			if (dist_min < 0.001)
-				break;
-
-			line_ctr++;
-		}
-	}
-
-	return depth;
-}
-
-void TerrainWindow::Run()
-{
-	// Start simulation.
-	//
-
-	verify_connect(&m_timerSim, SIGNAL(timeout()), this, SLOT(OnTimeout()));
-	m_timerSim.start(50);
-}
-
-void TerrainWindow::Stop()
-{
-	// Stop simulation.
-	//
-
-	m_timerSim.stop();
-	mp_Terrain->StopSim();
-	update();
-}
-
-void TerrainWindow::OnTimeout()
-{
-	mp_Terrain->UpdateSim(m_timerSim.interval());
-	update();
 }
 
 void TerrainWindow::CreateActions()
@@ -2472,12 +2082,9 @@ void TerrainWindow::OnView3D()
 
 	GetApp()->m_Tool.Clear();
 
-	// place camera at current mouse cursor position on surface looking north
-	double x, y;
-	PixelToWorld(m_ptLastMouse.x, m_ptLastMouse.y, x, y);
-	m_Camera.SetPos(x, y, 0.0);
+	VEC2 pos = mp_Terrain->GetCenter();
+	m_Camera.SetPos(pos.x, 0, mp_Terrain->GetMaxElev());
 	m_Camera.SetDirUp(VEC3(0.0, 1.0, 0.0), VEC3(0.0, 0.0, 1.0));
-	Update3DCameraHeight();
 
 	// render sky in 3d view
 	mp_Terrain->SetRenderSky(SkyBox::Mode::Box);
@@ -2588,21 +2195,6 @@ void TerrainWindow::OnClear()
 	update();
 }
 
-void TerrainWindow::SetWaterMode(TerrainGL::WaterMode mode)
-{
-	if (mp_Terrain)
-		mp_Terrain->SetWaterMode(mode);
-	update();
-}
-
-TerrainGL::WaterMode TerrainWindow::GetWaterMode()
-{
-	if (mp_Terrain)
-		return mp_Terrain->GetWaterMode();
-
-	return TerrainGL::WaterMode::Surface;
-}
-
 void TerrainWindow::SetColorScale(const char* scaleFile)
 {
 	// Set the active color scale.
@@ -2640,8 +2232,8 @@ void TerrainWindow::SetColorScale(const char* scaleFile)
 	}
 
 	// save the selection
-	//QSettings settings(ORG_KEY, APP_KEY);
-	//settings.setValue(LAST_TERRAIN_SCALE_FILE_KEY, scaleFile);
+	QSettings settings(ORG_KEY, APP_KEY);
+	settings.setValue(LAST_TERRAIN_SCALE_KEY, scaleFile);
 
 	update();
 }

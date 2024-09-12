@@ -28,12 +28,6 @@ TerrainGL::TerrainGL(const char* mapFolder)
 	, mb_RenderLights(false)
 	, mb_RenderTerrain(true)
 	, mb_RenderTileInfo(false)
-	, m_SimTime(0.0)
-	, m_WaterMode(WaterMode::Floor)
-	, mf_WaterElev(0.0)
-	, m_WaterColor(WATER_COLOR_R, WATER_COLOR_G, WATER_COLOR_B)
-	//, mp_WaterFBO(nullptr)
-	, mb_WaterProp(true)
 {
 	GLManager::CheckForOpenGLError(__FILE__, __LINE__);
 
@@ -80,35 +74,12 @@ TerrainGL::TerrainGL(const char* mapFolder)
 	m_shaderTerrain.SetUniform("Material.Ks", 0.1f, 0.1f, 0.1f);
 	m_shaderTerrain.SetUniform("Material.Shininess", 100.0f);
 
-	// build water shader
-
-	status = m_shaderWater.BuildShaderFromString("water", ShaderLib::GetVertexShaderWater(), ShaderLib::GetFragmentShaderWater());
-	if (status == false)
-	{
-		Logger::Write(__FUNCTION__, "Water shader faild to build.");
-		assert(false);
-	}
-	status = m_shaderWaterJC.BuildShaderFromString("water_jc", ShaderLib::GetVertexShaderWaterJC(), ShaderLib::GetFragmentShaderWaterJC());
-	if (status == false)
-	{
-		Logger::Write(__FUNCTION__, "Water shader (jc) faild to build.");
-		assert(false);
-	}
-
-	// shaders are added to static GLManager so can be accessed
-	// from other classes
-	GLManager::AddShader(m_shaderWater.GetName(), &m_shaderWater);
-	GLManager::AddShader(m_shaderWaterJC.GetName(), &m_shaderWaterJC);
-
 	// at end of construction, gl errors should be clear
 	GLManager::CheckForOpenGLError(__FILE__, __LINE__);
-
-	//mp_WaterFBO = new WaterFrameBuffer();
 }
 
 TerrainGL::~TerrainGL()
 {
-	//delete mp_WaterFBO;
 }
 
 void TerrainGL::Render(glm::mat4& matModel, glm::mat4& matView, glm::mat4& matProj, Camera& camera, 
@@ -116,10 +87,6 @@ void TerrainGL::Render(glm::mat4& matModel, glm::mat4& matView, glm::mat4& matPr
 {
 	// enable first clipping plane in vertex shader
 	glEnable(GL_CLIP_DISTANCE0);
-
-	// render to refraction fbo
-	//mp_WaterFBO->bindRefractionFrameBuffer();
-	//RenderScene(matModel, matView, matProj, vec4(0, 0, -1, mf_WaterElev));
 
 	// this is what i need for "unbind" - put it back to the actual
 	// default fbo, not opengl's, and set to window size
@@ -131,19 +98,6 @@ void TerrainGL::Render(glm::mat4& matModel, glm::mat4& matView, glm::mat4& matPr
 	// send value way outside possible terrain limits
 	glDisable(GL_CLIP_DISTANCE0);
 	RenderScene(matModel, matView, matProj, vec4(0, 0, 1, -10000.0));
-
-	// render water after render scene
-	//switch (m_WaterMode) {
-	//case WaterMode::Floor:
-	//	break;
-	//case WaterMode::Surface:
-	//case WaterMode::Real:
-	//	RenderWater(matModel, matView, matProj, camera, nearPlane, farPlane);
-	//	break;
-	//case WaterMode::Ex:
-	//	RenderWaterJC(matModel, matView, matProj, camera);
-	//	break;
-	//}
 
 	RenderAxes();
 	RenderContour();
@@ -233,234 +187,6 @@ void TerrainGL::RenderTile(TileType* pTile)
 	if (mb_RenderTileInfo)
 		RenderBox(pTile->minExt, pTile->maxExt);
 }
-
-//void TerrainGL::RenderWaterJC(glm::mat4& matModel, glm::mat4& matView, glm::mat4& matProj, Camera& camera)
-//{
-//	// Render water as a separate pass.
-//	//
-//	// Jay Conrod algorithm.
-//	//
-//
-//	const int NUM_WAVES = 4;		// 1-8
-//
-//	if (m_vbWaterHi.IsValid() == false)
-//	{
-//		CreateWaterBufferHi();
-//	}
-//
-//	GLManager::PushCull(true);
-//	GLManager::PushWind(GL_CW);
-//	GLManager::PushDepth(true, GL_LEQUAL);
-//
-//	ShaderGL* pShader = GLManager::GetShader("water_jc");
-//	assert(pShader != nullptr);
-//	pShader->Activate();
-//	pShader->AssertOnNotFound(false);
-//
-//	pShader->SetUniform("waterHeight", (float)mf_WaterElev);
-//	pShader->SetUniform("time", (float)m_SimTime);
-//
-//	if (mb_WaterProp == true)
-//	{
-//		pShader->SetUniform("numWaves", NUM_WAVES);
-//		for (int i = 0; i < NUM_WAVES; ++i)
-//		{
-//			char buf[32] = { 0 };
-//
-//			float amplitude = 0.5f / (i + 1);
-//			sprintf(buf, "amplitude[%d]", i);
-//			pShader->SetUniform(buf, amplitude);
-//
-//			float wavelength = 8.0 * PI / (i + 1);
-//			sprintf(buf, "wavelength[%d]", i);
-//			pShader->SetUniform(buf, wavelength);
-//
-//			float speed = 1.0f + 2 * i;
-//			sprintf(buf, "speed[%d]", i);
-//			pShader->SetUniform(buf, speed);
-//
-//			float angle = RandomInRange(-PI / 3.0, PI / 3.0);
-//			sprintf(buf, "direction[%d]", i);
-//			pShader->SetUniform(buf, cosf(angle), sinf(angle));
-//		}
-//		mb_WaterProp = false;
-//	}
-//
-//	glm::mat4 matMVP = matProj * matView * matModel;
-//	pShader->SetUniform("MVP", matMVP);
-//	pShader->SetUniform("eyePos", vec3(camera.GetPos().x, camera.GetPos().y, camera.GetPos().z));
-//
-//	// bind all of the textures (either directly or 
-//	// with my GLTexture::Activate())
-//
-//	pShader->SetUniform("envMap", 0);
-//
-//	glActiveTexture(GL_TEXTURE0);
-//	glBindTexture(GL_TEXTURE_2D, m_SkyBox.GetTextureUnit());
-//
-//	// enable alpha blending
-//	glEnable(GL_BLEND);
-//	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-//
-//	GLManager::CheckForOpenGLError(__FILE__, __LINE__);
-//
-//	m_vbWaterHi.Render();
-//
-//	//glDisable(GL_BLEND);
-//	GLManager::PopDepth();
-//	GLManager::PopWind();
-//	GLManager::PopCull();
-//}
-
-//void TerrainGL::RenderWater(glm::mat4& matModel, glm::mat4& matView, glm::mat4& matProj, Camera& camera, double nearPlane, double farPlane)
-//{
-//	// Render water as a separate pass.
-//	//
-//	// Assumes terrain already rendered in floor mode.
-//	//
-//
-//	ShaderGL* pShader = GLManager::GetShader("water");
-//	assert(pShader != nullptr);
-//
-//	pShader->AssertOnNotFound(false);
-//
-//	// following tutorial on https://www.youtube.com/watch?v=HusvGeEDU_U&t=284s
-//
-//	if (m_vbWater.IsValid() == false)
-//	{
-//		CreateWaterBuffer();
-//	}
-//
-//	GLManager::PushCull(true);
-//	GLManager::PushWind(GL_CW);
-//	GLManager::PushDepth(true, GL_LEQUAL);
-//
-//	pShader->Activate();
-//
-//	pShader->SetUniform("modelMatrix", matModel);
-//	pShader->SetUniform("viewMatrix", matView);
-//	pShader->SetUniform("projectionMatrix", matProj);
-//	glm::vec3 cameraPos = glm::vec3(camera.GetPos().x, camera.GetPos().y, camera.GetPos().z);
-//	pShader->SetUniform("cameraPos", cameraPos);
-//	pShader->SetUniform("waterHeight", (float)mf_WaterElev);
-//	pShader->SetUniform("waterColor", glm::vec4(m_WaterColor, 1.0));
-//	//pShader->SetUniform("near", (float)nearPlane);
-//	//pShader->SetUniform("far", (float)farPlane);
-//
-//	// bind all of the textures (either directly or 
-//	// with my GLTexture::Activate())
-//
-//	glActiveTexture(GL_TEXTURE0);
-//	glBindTexture(GL_TEXTURE_2D, mp_WaterFBO->getReflectionTexture());
-//	glActiveTexture(GL_TEXTURE1);
-//	glBindTexture(GL_TEXTURE_2D, mp_WaterFBO->getRefractionTexture());
-//	
-//	glActiveTexture(GL_TEXTURE4);
-//	glBindTexture(GL_TEXTURE_2D, mp_WaterFBO->getRefractionDepthTexture());
-//
-//	// enable alpha blending
-//	//glEnable(GL_BLEND);
-//	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-//
-//	pShader->SetUniform("surfaceMode", m_WaterMode == WaterMode::Surface);
-//	// these are actually the texture unit #'s, not fbos
-//	pShader->SetUniform("refractTex", WATER_REFRACT_UNIT);
-//
-//	GLManager::CheckForOpenGLError(__FILE__, __LINE__);
-//
-//	m_vbWater.Render();
-//
-//	//glDisable(GL_BLEND);
-//	GLManager::PopDepth();
-//	GLManager::PopWind();
-//	GLManager::PopCull();
-//}
-//
-//void TerrainGL::CreateWaterBufferHi()
-//{
-//	// Creater water vertex buffer at same
-//	// resolution as terrain.
-//	//
-//
-//	std::vector<VertexBufferGL::VertexWater> vxList;
-//	std::vector<unsigned int> indexList;
-//
-//	for (int r = 0; r < GetRowCount(); ++r)
-//	{
-//		for (int c = 0; c < GetColCount(); ++c)
-//		{
-//			VertexBufferGL::VertexWater vx;
-//			vx.x = static_cast<float>(c * GetPitch());
-//			vx.y = static_cast<float>(r * GetPitch());
-//			vxList.push_back(vx);
-//
-//			if (c < GetColCount() - 1 && r < GetRowCount() - 1)
-//			{
-//				// calculate indices, assumes cw
-//				// winding order
-//
-//				int v0 = r * (GetColCount()) + c;
-//				int v1 = (r + 1) * (GetColCount()) + c;
-//				int v2 = (r + 1) * (GetColCount()) + c + 1;
-//				int v3 = r * (GetColCount()) + c + 1;
-//
-//				// NW triangle
-//				indexList.push_back(v0);
-//				indexList.push_back(v1);
-//				indexList.push_back(v2);
-//
-//				// SE triangle
-//				indexList.push_back(v0);
-//				indexList.push_back(v2);
-//				indexList.push_back(v3);
-//			}
-//		}
-//	}
-//
-//	if (m_vbWaterHi.CreateWater(vxList, indexList) == false)
-//	{
-//		Logger::Write(__FUNCTION__, "CreateWater() failed");
-//	}
-//}
-//
-//void TerrainGL::CreateWaterBuffer()
-//{
-//	// Creater water vertex buffer.
-//	//
-//
-//	std::vector<VertexBufferGL::VertexWater> vxList;
-//	std::vector<unsigned int> indexList;
-//
-//	// min res
-//	VertexBufferGL::VertexWater vx;
-//	vx.x = static_cast<float>(0);
-//	vx.y = static_cast<float>(0);
-//	vxList.push_back(vx);
-//	vx.x = static_cast<float>(0);
-//	vx.y = static_cast<float>(GetSizeY());
-//	vxList.push_back(vx);
-//	vx.x = static_cast<float>(GetSizeX());
-//	vx.y = static_cast<float>(GetSizeY());
-//	vxList.push_back(vx);
-//	vx.x = static_cast<float>(GetSizeX());
-//	vx.y = static_cast<float>(0);
-//	vxList.push_back(vx);
-//
-//	// NW triangle
-//	indexList.push_back(0);
-//	indexList.push_back(1);
-//	indexList.push_back(2);
-//
-//	// SE triangle
-//	indexList.push_back(0);
-//	indexList.push_back(2);
-//	indexList.push_back(3);
-//
-//	if (m_vbWater.CreateWater(vxList, indexList) == false)
-//	{
-//		Logger::Write(__FUNCTION__, "CreateWater() failed");
-//	}
-//}
 
 void TerrainGL::RenderAxes()
 {
@@ -762,7 +488,10 @@ void TerrainGL::Rebuild(RectType& rectRegion)
 
 				VEC3 N = CalcVertexNormal(dbRow, dbCol);
 				double height = GetHeight(dbRow, dbCol);
-
+				UInt8 flags = GetFlags(dbRow, dbCol);
+				if ((flags & static_cast<UInt8>(Flags::NODATA)) > 0)
+					height = static_cast<float>(GetMinElev());
+				
 				// subtract water, if any
 				height -= GetDepth(dbRow, dbCol);
 
@@ -787,22 +516,6 @@ void TerrainGL::Rebuild(RectType& rectRegion)
 
 	// update skirt
 	//LoadSkirt();
-}
-
-void TerrainGL::UpdateSim(int msec)
-{
-	// Update simulated elements.
-	//
-	// Inputs:
-	//		msec = msec since last update
-	//
-
-	m_SimTime += (double)msec * 0.001;
-}
-
-void TerrainGL::StopSim()
-{
-	m_SimTime = 0.0;
 }
 
 PixelType TerrainGL::GetPixel(UInt16 x, UInt16 y)
@@ -964,10 +677,6 @@ void TerrainGL::LoadTile(TileType* pTile, UInt32 tileRow, UInt32 tileCol)
 				pTile->minExt.z = vx.z;
 			if (pTile->maxExt.z < vx.z)
 				pTile->maxExt.z = vx.z;
-
-			// get presumed single elevation for water
-			if ((vxDesc.Flags & (UInt8)Flags::WATER) > 0)
-				mf_WaterElev = vxDesc.Height;
 
 			if (r < TILE_SIZE && c < TILE_SIZE)
 			{
@@ -1214,36 +923,6 @@ void TerrainGL::SetRenderSky(SkyBox::Mode mode)
 SkyBox::Mode TerrainGL::GetRenderSky()
 {
 	return m_SkyBox.GetMode();
-}
-
-void TerrainGL::SetWaterMode(TerrainGL::WaterMode mode)
-{
-	m_WaterMode = mode;
-}
-
-TerrainGL::WaterMode TerrainGL::GetWaterMode()
-{
-	return m_WaterMode;
-}
-
-double TerrainGL::GetWaterElev()
-{
-	return mf_WaterElev;
-}
-
-void TerrainGL::SetWaterElev(double elev)
-{
-	mf_WaterElev = elev;
-}
-
-vec3 TerrainGL::GetWaterColor()
-{
-	return m_WaterColor;
-}
-
-void TerrainGL::SetWaterColor(double r, double g, double b)
-{
-	m_WaterColor = vec3(r, g, b);
 }
 
 void TerrainGL::OnDataChanged()
