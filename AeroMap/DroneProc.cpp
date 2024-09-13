@@ -67,33 +67,45 @@ int DroneProc::Run(Stage::Id initStage)
 
 	if (initStage <= Stage::Id::Dataset)
 		status = mp_StageDataset->Run();
+	emit sig_stage_finished((int)Stage::Id::Dataset);
 
 	if ((status == 0) && (initStage <= Stage::Id::OpenSFM))
 		status = mp_StageSFM->Run();
+	emit sig_stage_finished((int)Stage::Id::OpenSFM);
 
 	if ((status == 0) && (initStage <= Stage::Id::OpenMVS))
 		status = mp_StageMVS->Run();
+	emit sig_stage_finished((int)Stage::Id::OpenMVS);
 
 	if ((status == 0) && (initStage <= Stage::Id::Filter))
 		status = mp_StageFilter->Run();
+	emit sig_stage_finished((int)Stage::Id::Filter);
 
 	if ((status == 0) && (initStage <= Stage::Id::Mesh))
 		status = mp_StageMesh->Run();
+	emit sig_stage_finished((int)Stage::Id::Mesh);
 
 	if ((status == 0) && (initStage <= Stage::Id::Texture))
 		status = mp_StageTexture->Run();
+	emit sig_stage_finished((int)Stage::Id::Texture);
 
 	if ((status == 0) && (initStage <= Stage::Id::Georeference))
 		status = mp_StageGeoref->Run();
+	emit sig_stage_finished((int)Stage::Id::Georeference);
 
 	if ((status == 0) && (initStage <= Stage::Id::DEM))
 		status = mp_StageDEM->Run();
+	emit sig_stage_finished((int)Stage::Id::DEM);
 
 	if ((status == 0) && (initStage <= Stage::Id::Orthophoto))
 		status = mp_StageOrtho->Run();
+	emit sig_stage_finished((int)Stage::Id::Orthophoto);
 
 	if ((status == 0) && (initStage <= Stage::Id::Report))
 		status = mp_StageReport->Run();
+	emit sig_stage_finished((int)Stage::Id::Report);
+
+	emit sig_drone_proc_finished(status);
 
 	GetApp()->LogWrite("Drone image processing complete.");
 

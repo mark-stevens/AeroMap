@@ -6,7 +6,6 @@
 #include "AboutDlg.h"				// Help about dialog
 #include "ConfigDlg.h"				// Edit configuration dialog
 #include "ScaleColorDlg.h"			// Edit color scale dialog
-#include "DroneProc.h"				// Drone photogrammetry pipeline
 #include "DroneProcDlg.h"			// Drone photogrammetry options
 #include "LidarModel.h"				// Lidar DTM/DSM
 #include "LidarModelDlg.h"			// Lidar DTM/DSM options
@@ -64,11 +63,12 @@ MainWindow::MainWindow()
 	, mp_actionToolViewZoomIn(nullptr)
 	, mp_actionToolViewZoomOut(nullptr)
 	, mp_actionDroneProc(nullptr)
-	//, mp_GeoIndex(nullptr)
+	, mp_DroneProc(nullptr)
 	, mp_cboAttrLidar(nullptr)
 	, mp_cboColorLidar(nullptr)
 	, mp_cboColorTerrain(nullptr)
 	, mb_PaintMask(false)
+	, m_InitStage(Stage::Id::Dataset)
 {
     mp_mdiArea = new QMdiArea();
     mp_mdiArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
@@ -161,7 +161,7 @@ void MainWindow::closeEvent(QCloseEvent* event)
 	delete mp_ProjectWindow;
 	delete mp_OutputWindow;
 
-	//delete mp_GeoIndex;
+	delete mp_DroneProc;
 
 	delete mp_menuFile;
 	delete mp_menuView;
@@ -764,55 +764,48 @@ void MainWindow::OnViewMenuShow()
 
 // running a function in another thread using QThread - without subclassing QThread
 
-//void MainWindow::OnReindex()
-//{
-//	QMessageBox::StandardButton ret = QMessageBox::warning(
-//		this, 
-//		"Rebuild Geospatial Index", 
-//		"Rebuild index? This can be time-consuming and must run to completion.", 
-//		QMessageBox::Yes | QMessageBox::No);
-//	if (ret != QMessageBox::Yes)
-//		return;
-//
-//	delete mp_GeoIndex;
-//	mp_GeoIndex = new GeoIndex(GetApp()->GetGeoDataPath());
-//	QThread* pThread = new QThread();
-//
-//	mp_GeoIndex->moveToThread(pThread);
-//
-//	// starts the geoindex object after the thread has started; this method is run on the thread
-//	verify_connect(pThread, SIGNAL(started()), this, SLOT(OnReindexStart()));
-//	// links the geoindex object to the GUI
-//	verify_connect(mp_GeoIndex, SIGNAL(fileIndexed(QString)), this, SLOT(OnFileIndexed(QString)));
-//	// causes the thread's event loop to exit once the geoindex has finished
-//	verify_connect(mp_GeoIndex, SIGNAL(finished(unsigned int)), this, SLOT(OnReindexFinished(unsigned int)));
-//	// last 2 connects handle cleanup, since our objects were created without parents. the 'deleteLater' method causes 
-//	// the objects to be deleted once there are no more pending events in the event loop. geoindex is deleted on the 
-//	// thread, and the thread itself is actually deleted on the main thread. This 'deleteLater' call works for 
-//	// geoindex, even though the thread's event loop would have already exited, because QThread does one final 
-//	// loop to handle all deferred deletetion events once its event loop has exited. QApplication does the same.
-//	//verify_connect(mp_GeoIndex, SIGNAL(finished(unsigned int)), mp_GeoIndex, SLOT(deleteLater()));
-//	//verify_connect(mp_GeoIndex, SIGNAL(finished(unsigned int)), thread, SLOT(deleteLater()));
-//
-//	pThread->start();
-//}
-//
-//void MainWindow::OnReindexStart()
-//{
-////may not be using this slot properly?
-//	mp_GeoIndex->RebuildIndex();
-//}
-//
-//void MainWindow::OnFileIndexed(QString fileName)
-//{
-//	mp_OutputWindow->AppendText(XString(fileName).c_str());
-//}
-//
-//void MainWindow::OnReindexFinished(unsigned int fileCount)
-//{
-//	XString strMessage = XString::Format("Reindex complete - %u files indexed.", fileCount);
-//	QMessageBox::information(this, tr("Reindex"), strMessage.c_str(), QMessageBox::StandardButton::Ok);
-//}
+void MainWindow::OnDroneProcAsync(Stage::Id init_stage)
+{
+	m_InitStage = init_stage;
+
+	delete mp_DroneProc;
+	mp_DroneProc = new DroneProc(this);
+	QThread* pThread = new QThread();
+
+	mp_DroneProc->moveToThread(pThread);
+
+	// starts the droneproc object after the thread has started; this method is run on the thread
+	verify_connect(pThread, SIGNAL(started()), this, SLOT(OnDroneProcStart()));
+	// links the droneproc object to the GUI
+	verify_connect(mp_DroneProc, SIGNAL(sig_stage_finished(int)), this, SLOT(OnStageComplete(int)));
+	// causes the thread's event loop to exit once the droneproc has finished
+	verify_connect(mp_DroneProc, SIGNAL(sig_drone_proc_finished(int)), this, SLOT(OnDroneProcFinished(int)));
+	// last 2 connects handle cleanup, since our objects were created without parents. the 'deleteLater' method causes 
+	// the objects to be deleted once there are no more pending events in the event loop. droneproc is deleted on the 
+	// thread, and the thread itself is actually deleted on the main thread. This 'deleteLater' call works for 
+	// droneproc, even though the thread's event loop would have already exited, because QThread does one final 
+	// loop to handle all deferred deletion events once its event loop has exited. QApplication does the same.
+	//verify_connect(mp_DroneProc, SIGNAL(sig_drone_proc_finished(int)), mp_DroneProc, SLOT(deleteLater()));
+	//verify_connect(mp_DroneProc, SIGNAL(sig_drone_proc_finished(int)), thread, SLOT(deleteLater()));
+
+	pThread->start();
+}
+
+void MainWindow::OnDroneProcStart()
+{
+	mp_DroneProc->Run(m_InitStage);
+}
+
+void MainWindow::OnStageComplete(int stage)
+{
+	mp_OutputWindow->AppendText(XString::Format(">>> Stage %d complete", stage));
+}
+
+void MainWindow::OnDroneProcFinished(int status)
+{
+	XString strMessage = XString::Format(">>> Drone image processing complete. Status = %d.", status);
+	mp_OutputWindow->AppendText(strMessage.c_str());
+}
 
 void MainWindow::OnConfig()
 {
@@ -1074,12 +1067,6 @@ void MainWindow::OnDroneProc()
 	DroneProcDlg dlg(this);
 	if (dlg.exec() == QDialog::Accepted)
 	{
-		DroneProc* pProc = new DroneProc(this);
-
-//TODO:
-//works, but intent is to run async using signals & slots, like geoindex
-		pProc->Run(dlg.GetInitStage());
-
-		delete pProc;
+		OnDroneProcAsync(dlg.GetInitStage());
 	}
 }

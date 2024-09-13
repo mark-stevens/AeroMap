@@ -2,13 +2,13 @@
 #define MAINWINDOW_H
 
 #include "AeroMap.h"			// Application header
-//#include "GeoIndex.h"			// Geospatial index manager
+#include "DroneProc.h"			// Drone photogrammetry pipeline
 
 #include "OutputWindow.h"
 #include "ProjectWindow.h"
 
 // view windows
-#include "DroneWindow.h"		// Geodata workspace
+#include "DroneWindow.h"		// Drone imagery workspace
 #include "OrthoWindow.h"		// Orthophoto window
 #include "LidarWindow.h"		// Lidar workspace
 #include "TerrainWindow.h"		// Terrain model view
@@ -59,10 +59,10 @@ private slots:
 	void OnViewOutput();
 	void OnViewMenuShow();
 
-	//void OnReindex();
-	//void OnReindexStart();
-	//void OnFileIndexed(QString fileName);
-	//void OnReindexFinished(unsigned int fileCount);
+	void OnDroneProcAsync(Stage::Id init_stage);
+	void OnDroneProcStart();
+	void OnStageComplete(int stage);
+	void OnDroneProcFinished(int status);
 
 	void OnToolNone();
 	void OnToolSelect();
@@ -126,7 +126,8 @@ private:
 	ProjectWindow* mp_ProjectWindow;
 	OutputWindow* mp_OutputWindow;
 
-	//GeoIndex* mp_GeoIndex;
+	DroneProc* mp_DroneProc;
+	Stage::Id m_InitStage;
 	
 	bool mb_PaintMask;
 

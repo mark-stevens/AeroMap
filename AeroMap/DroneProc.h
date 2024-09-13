@@ -24,8 +24,6 @@ public:
 	DroneProc(QObject* parent);
 	~DroneProc();
 
-	int Run(Stage::Id initStage);
-
 private:
 
 	StageDataset* mp_StageDataset;
@@ -45,12 +43,12 @@ private:
 
 public slots:
 
-	//void RunAsync(Stage::Id initStage);
+	int Run(Stage::Id initStage);
 
 signals:
 
-	//void sig_stage_finished(int stage_id);		// emitted after each stage completes
-	//void sig_proc_finished();						// emitted after entire process complete
+	void sig_stage_finished(int stage_id);			// emitted after each stage completes
+	void sig_drone_proc_finished(int status);		// emitted after entire process complete
 };
 
 #endif // #ifndef DRONEPROC_H
