@@ -39,8 +39,8 @@ int StageOrtho::Run()
 
         double res_cap = Gsd::cap_resolution(arg.orthophoto_resolution, tree.opensfm_reconstruction,
             arg.ignore_gsd,
-            (georef.is_valid == false) && arg.ignore_gsd,
-            false);         //TODO:has_gcp = reconstruction.has_gcp()
+            (georef.is_valid == false) && arg.ignore_gsd,       // ignore resolution
+            GetProject().GetGcpCount() > 0);                    // has gcp
 
         // why 1/100 here?
         double resolution = 1.0 / (res_cap / 100.0);

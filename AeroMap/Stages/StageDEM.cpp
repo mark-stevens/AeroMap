@@ -47,7 +47,7 @@ int StageDEM::Run()
 		1.0,									// scaling
 		arg.ignore_gsd,							// ignore gsd
 		ignore_resolution && arg.ignore_gsd,	// ignore scaling
-		false);									// TODO: has_gcp=reconstruction.has_gcp()
+		GetProject().GetGcpCount() > 0);		// has gcp
 
 	if (arg.pc_classify && pc_model_found)
 	{
