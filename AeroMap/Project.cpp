@@ -9,6 +9,7 @@
 //		drone
 //			input = location of drone photogrammetry inputs
 //			output = root folder that will receive outputs
+//			gcp_file = path to gcp text file
 //		lidar
 //			src = D:/Geodata/lidar/test-data/points-1.4_6.las
 //			src = D:/Geodata/lidar/test-data/points-1.4_7.las
@@ -47,7 +48,7 @@ Project::Project()
 	, m_undistorted_image_max_size(0)
 {
 	m_ImageList.reserve(128);
-	mv_Lidar.reserve(32);
+	m_LidarFiles.reserve(32);
 }
 
 Project::~Project()
@@ -116,6 +117,8 @@ int Project::Load(const char* fileName)
 							SetDroneInputPath(strLine.GetToken(1));
 						else if (strLine.BeginsWith("output"))
 							SetDroneOutputPath(strLine.GetToken(1));
+						else if (strLine.BeginsWith("gcp_file"))
+							arg.gcp = strLine.GetToken(1);
 					}
 					break;
 				case Section::Lidar:
@@ -155,13 +158,63 @@ void Project::LoadData()
 
 	GDALAllRegister();
 
-	for (int i = 0; i < (int)mv_Lidar.size(); ++i)
+	if (arg.gcp.GetLength() > 0)
+		LoadGcpFile(arg.gcp);
+
+	for (int i = 0; i < (int)m_LidarFiles.size(); ++i)
 	{
-		if (mv_Lidar[i].exists)
-			mv_Lidar[i].pFile = new LasFile(mv_Lidar[i].src.c_str());
+		if (m_LidarFiles[i].exists)
+			m_LidarFiles[i].pFile = new LasFile(m_LidarFiles[i].src.c_str());
 	}
 
 	emit projectChanged_sig();
+}
+
+void Project::LoadGcpFile(XString file_name)
+{
+	// Format:
+	//
+	// EPSG:2180											: epsg or proj string
+	// 340607.768 548220.879 70.8 149 1620 img_4881.jpg		; geo_x geo_y geo_z  pix_x pix_y image_file
+	// 340607.768 548220.879 70.8 1607 1061 img_4858.jpg
+	//
+
+	m_GcpList.clear();
+	ms_gcp_geo_ref.Clear();
+
+	if (QFile::exists(file_name.c_str()) == false)
+	{
+		Logger::Write(__FUNCTION__, "GCP file not found: '%s'", file_name.c_str());
+		return;
+	}
+
+	TextFile textFile(file_name.c_str());
+	if (textFile.GetLineCount() > 1)
+	{
+		ms_gcp_geo_ref = textFile.GetLine(0).c_str();
+
+		for (unsigned int i = 1; i < textFile.GetLineCount(); ++i)
+		{
+			XString line = textFile.GetLine(i).c_str();
+			int token_count = line.Tokenize(" \t");
+			if (token_count > 5)
+			{
+				GcpType gcp;
+				gcp.geo_x = line.GetToken(0).GetDouble();
+				gcp.geo_y = line.GetToken(1).GetDouble();
+				gcp.geo_z = line.GetToken(2).GetDouble();
+				gcp.pix_x = line.GetToken(3).GetInt();
+				gcp.pix_y = line.GetToken(4).GetInt();
+				gcp.image_file = line.GetToken(5);
+
+				m_GcpList.push_back(gcp);
+			}
+		}
+	}
+	else
+	{
+		Logger::Write(__FUNCTION__, "Invalid GCP file: '%s'", file_name.c_str());
+	}
 }
 
 int Project::Save(const char* fileName)
@@ -194,12 +247,13 @@ int Project::Save(const char* fileName)
 		fprintf(pFile, "drone\n");
 		fprintf(pFile, "\tinput = %s\n", ms_DroneInputPath.c_str());
 		fprintf(pFile, "\toutput = %s\n", ms_DroneOutputPath.c_str());
+		fprintf(pFile, "\tgcp_file = %s\n", arg.gcp.c_str());
 
 		// lidar section
 		fprintf(pFile, "lidar\n");
-		for (int i = 0; i < mv_Lidar.size(); ++i)
+		for (int i = 0; i < m_LidarFiles.size(); ++i)
 		{
-			fprintf(pFile, "\tsrc = %s\n", mv_Lidar[i].src.c_str());
+			fprintf(pFile, "\tsrc = %s\n", m_LidarFiles[i].src.c_str());
 		}
 		
 		fclose(pFile);
@@ -381,9 +435,11 @@ void Project::FreeResources()
 	// Free project resources.
 	//
 
+	m_GcpList.clear();
+
 	// free lidar resources
 
-	for (auto lidar : mv_Lidar)
+	for (auto lidar : m_LidarFiles)
 	{
 		if (lidar.pFile)
 		{
@@ -391,14 +447,27 @@ void Project::FreeResources()
 			lidar.pFile = nullptr;
 		}
 	}
-	mv_Lidar.clear();
+	m_LidarFiles.clear();
 
 	m_ImageList.clear();
 }
 
+int Project::GetGcpCount()
+{
+	return (int)m_GcpList.size();
+}
+
+Project::GcpType Project::GetGcp(int index)
+{
+	GcpType gcp;
+	if (index >= 0 && index < GetGcpCount())
+		gcp = m_GcpList[index];
+	return gcp;
+}
+
 int Project::GetLidarFileCount()
 {
-	return static_cast<int>(mv_Lidar.size());
+	return static_cast<int>(m_LidarFiles.size());
 }
 
 void Project::AddLidarFile(const char* pathName)
@@ -428,7 +497,7 @@ void Project::AddLidarFileToList(const char* pathName)
 		lidar.pFile = new LasFile(pathName);
 		lidar.type = lidar.pFile->GetFileType();
 	}
-	mv_Lidar.push_back(lidar);
+	m_LidarFiles.push_back(lidar);
 }
 
 void Project::RemoveLidarFile(int index)
@@ -439,10 +508,10 @@ void Project::RemoveLidarFile(int index)
 	//		index = index of file to remove
 	//
 
-	if (index >= (int)mv_Lidar.size())
+	if (index >= (int)m_LidarFiles.size())
 		return;
 
-	mv_Lidar.erase(mv_Lidar.cbegin() + index);
+	m_LidarFiles.erase(m_LidarFiles.cbegin() + index);
 
 	mb_IsDirty = true;
 
@@ -452,7 +521,7 @@ void Project::RemoveLidarFile(int index)
 XString Project::GetLidarFileName(int index)
 {
 	if (index >= 0 && index < GetLidarFileCount())
-		return mv_Lidar[index].src;
+		return m_LidarFiles[index].src;
 
 	return "";
 }
@@ -460,7 +529,7 @@ XString Project::GetLidarFileName(int index)
 LasFile* Project::GetLasFile(int index)
 {
 	if (index >= 0 && index < GetLidarFileCount())
-		return mv_Lidar[index].pFile;
+		return m_LidarFiles[index].pFile;
 
 	return nullptr;
 }
@@ -468,7 +537,7 @@ LasFile* Project::GetLasFile(int index)
 bool Project::GetLidarExists(int index)
 {
 	if (index >= 0 && index < GetLidarFileCount())
-		return mv_Lidar[index].exists;
+		return m_LidarFiles[index].exists;
 
 	return false;
 }
@@ -668,6 +737,13 @@ void Project::InitArg()
 	// --smrf-window <positive float>
 	//				Simple Morphological Filter window radius parameter (meters). Default: 18.0
 
+	// gcp file may have been loaded with project, do not overwrite here
+	//arg.gcp = "";
+	// --gcp <path string>   
+	//				Path to the file containing the ground control points used for georeferencing. The file needs
+	//				to use the following format: EPSG:<code> or <+proj definition> geo_x geo_y geo_z im_x im_y
+	//				image_name [gcp_name] [extra1] [extra2] Default: None
+
 	arg.max_concurrency = 16;
 	// may return 0 when not able to detect
 	const unsigned int processor_count = std::thread::hardware_concurrency();
@@ -763,9 +839,6 @@ void Project::InitArg()
 	//				Generate OBJs that have a single material and a single texture file instead of multiple ones.
 	//				Default: False
 	// --gltf                Generate single file Binary glTF (GLB) textured models. Default: False
-	// --gcp <path string>   Path to the file containing the ground control points used for georeferencing. The file needs
-	//				to use the following format: EPSG:<code> or <+proj definition> geo_x geo_y geo_z im_x im_y
-	//				image_name [gcp_name] [extra1] [extra2] Default: None
 	// --geo <path string>   Path to the image geolocation file containing the camera center coordinates used for
 	//				georeferencing. If you don't have values for yaw/pitch/roll you can set them to 0. The file
 	//				needs to use the following format: EPSG:<code> or <+proj definition> image_name geo_x geo_y

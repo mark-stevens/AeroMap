@@ -20,6 +20,7 @@ ProjectWindow::ProjectWindow(QWidget* parent)
 	, mp_ItemDroneRoot(nullptr)
 	, mp_ItemDroneInput(nullptr)
 	, mp_ItemDroneOutput(nullptr)
+	, mp_ItemGcpFile(nullptr)
 	, mp_ItemLidarRoot(nullptr)
 	, mp_actionActivate(nullptr)
 	, mp_actionAddLidarFile(nullptr)
@@ -110,6 +111,11 @@ void ProjectWindow::UpdateUI()
 	mp_ItemDroneInput = new QTreeWidgetItem(QStringList(str.c_str()), static_cast<int>(ItemType::DroneInput));
 	mp_ItemDroneInput->setToolTip(0, str.c_str());
 	mp_ItemDroneRoot->addChild(mp_ItemDroneInput);
+
+	str = XString::Format("GCP File: %s", arg.gcp.GetLength() > 0 ? arg.gcp.c_str() : "---");
+	mp_ItemGcpFile = new QTreeWidgetItem(QStringList(str.c_str()), static_cast<int>(ItemType::GcpFile));
+	mp_ItemGcpFile->setToolTip(0, str.c_str());
+	mp_ItemDroneRoot->addChild(mp_ItemGcpFile);
 
 	str = XString::Format("Output Path: %s", GetProject().GetDroneOutputPath().c_str());
 	if (QFile::exists(GetProject().GetDroneOutputPath().c_str()) == false)
@@ -217,6 +223,22 @@ void ProjectWindow::OnItemDoubleClicked(QTreeWidgetItem* pItem, int column)
 			UpdateUI();
 		}
 	}
+	else if (pItem == mp_ItemGcpFile)
+	{
+		XString filter = "GCP Files (*.txt)";
+
+		XString fileName = QFileDialog::getOpenFileName(
+			this,
+			tr("Select File"),
+			GetProject().GetDroneInputPath().c_str(),
+			filter.c_str());
+
+		if (fileName.GetLength() > 0)
+		{
+			arg.gcp = fileName;
+			UpdateUI();
+		}
+	}
 	else if (pItem == mp_ItemDroneOutput)
 	{
 		XString path = SelectFolder();
@@ -275,6 +297,9 @@ void ProjectWindow::DisplayProperties(QTreeWidgetItem* pItem)
 			break;
 		case ItemType::DroneInput:
 			break;
+		case ItemType::GcpFile:
+			DisplayGcpProperties();
+			break;
 		case ItemType::DroneOutput:
 			break;
 		case ItemType::LidarFile:
@@ -284,6 +309,26 @@ void ProjectWindow::DisplayProperties(QTreeWidgetItem* pItem)
 			break;
 		}
 	}
+}
+
+void ProjectWindow::DisplayGcpProperties()
+{
+	MetaDataDlg dlg(this, "GCP File");
+
+	XString file_name = arg.gcp;
+	XString meta = file_name + "\n";
+
+	int point_count = GetProject().GetGcpCount();
+	meta += XString::Format("Point Count: %d\n", point_count);
+	for (int i = 0; i < point_count; ++i)
+	{
+		Project::GcpType gcp = GetProject().GetGcp(i);
+		meta += XString::Format("  %2d %0.3f %0.3f %0.3f %5d %5d %s\n",
+			i, gcp.geo_x, gcp.geo_y, gcp.geo_z, gcp.pix_x, gcp.pix_y, gcp.image_file.c_str());
+	}
+
+	dlg.SetMetaData(meta);
+	dlg.exec();
 }
 
 void ProjectWindow::DisplayLidarProperties(QTreeWidgetItem* pItem)
@@ -407,6 +452,9 @@ void ProjectWindow::contextMenuEvent(QContextMenuEvent* event)
 	case ItemType::ProjectRoot:
 		break;
 	case ItemType::DroneInput:
+		menu.addAction(mp_actionOpenFolder);
+		menu.addAction(mp_actionProperties);
+	case ItemType::GcpFile:
 		menu.addAction(mp_actionOpenFolder);
 		menu.addAction(mp_actionProperties);
 	case ItemType::DroneOutput:

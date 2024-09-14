@@ -798,13 +798,13 @@ void MainWindow::OnDroneProcStart()
 
 void MainWindow::OnStageComplete(int stage)
 {
-	mp_OutputWindow->AppendText(XString::Format(">>> Stage %d complete", stage));
+	//mp_OutputWindow->AppendText(XString::Format("Stage %d complete", stage));
 }
 
 void MainWindow::OnDroneProcFinished(int status)
 {
-	XString strMessage = XString::Format(">>> Drone image processing complete. Status = %d.", status);
-	mp_OutputWindow->AppendText(strMessage.c_str());
+	//XString strMessage = XString::Format("Drone image processing complete. Status = %d.", status);
+	//mp_OutputWindow->AppendText(strMessage.c_str());
 }
 
 void MainWindow::OnConfig()

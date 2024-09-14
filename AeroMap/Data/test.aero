@@ -4,6 +4,7 @@ project
 drone
 	input = D:/test_aero/images
 	output = D:/test_aero
+	gcp_file = C:/Users/xmark/Desktop/gcp_list.txt
 lidar
 	src = D:/Geodata/lidar/1.2_2.laz
 	src = D:/Geodata/lidar/1.2_3.las

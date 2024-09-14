@@ -38,6 +38,7 @@ private:
 
 		DroneRoot,			// root node for drone photogrammetry
 		DroneInput,			// location of drone photogrammetry inputs
+		GcpFile,			// full path/file name of gcp file
 		DroneOutput,		// root folder that will receive outputs
 
 		LidarRoot,			// root node for lidar workspace
@@ -48,6 +49,7 @@ private:
 	QTreeWidgetItem* mp_ItemRoot;			// root tree node
 	QTreeWidgetItem* mp_ItemDroneRoot;
 	QTreeWidgetItem* mp_ItemDroneInput;
+	QTreeWidgetItem* mp_ItemGcpFile;
 	QTreeWidgetItem* mp_ItemDroneOutput;
 	QTreeWidgetItem* mp_ItemLidarRoot;
 
@@ -85,6 +87,7 @@ private:
 
 	void CreateActions();
 	void DisplayProperties(QTreeWidgetItem* pItem);
+	void DisplayGcpProperties();
 	void DisplayLidarProperties(QTreeWidgetItem* pItem);
 	void DisplayTerrainProperties(QTreeWidgetItem* pItem);
 	XString SelectFolder();

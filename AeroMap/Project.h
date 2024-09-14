@@ -50,6 +50,8 @@ struct ArgType
 
 	bool ignore_gsd;
 
+	XString gcp;
+
 	int max_concurrency;
 };
 extern ArgType arg;
@@ -133,7 +135,26 @@ public:
 		{
 		}
 	};
-		
+
+	struct GcpType
+	{
+		double geo_x;
+		double geo_y;
+		double geo_z;
+		int pix_x;
+		int pix_y;
+		XString image_file;
+
+		GcpType()
+			: geo_x(0.0)
+			, geo_y(0.0)
+			, geo_z(0.0)
+			, pix_x(0)
+			, pix_y(0)
+		{
+		}
+	};
+
 	struct LidarType
 	{
 		GIS::GEODATA type;		// geospatial data type, las or laz only
@@ -144,6 +165,7 @@ public:
 		LidarType()
 			: type(GIS::GEODATA::None)
 			, pFile(nullptr)
+			, exists(false)
 		{
 		}
 	};
@@ -171,11 +193,14 @@ public:
 	XString GetDroneOutputPath();
 	void    SetDroneOutputPath(XString path);
 	
-	int get_depthmap_resolution();
-	int get_undistorted_image_max_size();
+	int     GetGcpCount();
+	GcpType GetGcp(int index);
+
+	int  get_depthmap_resolution();
+	int  get_undistorted_image_max_size();
 	void set_undistorted_image_max_size(int size);
 
-	int GetMaxDim();				// single largest image dimension
+	int      GetMaxDim();			// single largest image dimension
 	SizeType GetMaxDims();			// dimensions of largest image (max width x height)
 
 	XString GetCoordsFileName();
@@ -196,7 +221,9 @@ signals:
 private:
 
 	std::vector<ImageType> m_ImageList;		// drone photogrammetry input images
-	std::vector<LidarType> mv_Lidar;		// lidar files
+	std::vector<GcpType> m_GcpList;			// ground control points
+	XString ms_gcp_geo_ref;					// georef string for gcps 
+	std::vector<LidarType> m_LidarFiles;	// lidar files
 	
 	XString ms_FileName;		// project path/file name
 	XString ms_ProjectName;		// project name
@@ -217,6 +244,7 @@ private:
 	int  GetIndentLevel(XString& str);
 	void FreeResources();
 	void LoadData();
+	void LoadGcpFile(XString file_name);
 
 	void InitArg();
 	void InitTree();
