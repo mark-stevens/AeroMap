@@ -147,13 +147,17 @@ void TerrainWindow::paintGL()
 		if (ms_FileName.GetLength() > 0)
 		{
 			mp_Terrain = new TerrainGL(ms_FileName.c_str());
-			// keep a singleton ptr to the base class for application-wide access
-			//GetApp()->SetTerrain(dynamic_cast<Terrain*>(mp_Terrain));
 
 			QSettings settings(ORG_KEY, APP_KEY);
 			XString scaleFile = settings.value(LAST_TERRAIN_SCALE_KEY, "").toString();
-			if (scaleFile.GetLength() > 0)
-				SetColorScale(scaleFile.c_str());
+			if (QFile::exists(scaleFile.c_str()))
+			{
+				// using orthophoto
+				if (scaleFile.EndsWithNoCase(ScaleColor::GetDefaultExt()))
+					SetColorScale(scaleFile.c_str());
+				else
+					SetColorImage(scaleFile.c_str());
+			}
 
 			OnView3D();
 			GLManager::CheckForOpenGLError(__FILE__, __LINE__);
@@ -2234,6 +2238,28 @@ void TerrainWindow::SetColorScale(const char* scaleFile)
 	// save the selection
 	QSettings settings(ORG_KEY, APP_KEY);
 	settings.setValue(LAST_TERRAIN_SCALE_KEY, scaleFile);
+
+	update();
+}
+
+void TerrainWindow::SetColorImage(const char* imageFile)
+{
+	// Use texture instead of color scale.
+	//
+	// Inputs:
+	//		imageFile = image file
+	//
+
+	assert(imageFile != nullptr);
+
+	if (QFile::exists(imageFile) == false)
+		return;
+
+	mp_Terrain->SetTexture(imageFile);
+
+	// save the selection
+	QSettings settings(ORG_KEY, APP_KEY);
+	settings.setValue(LAST_TERRAIN_SCALE_KEY, imageFile);
 
 	update();
 }

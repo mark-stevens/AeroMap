@@ -561,6 +561,11 @@ int TerrainGL::GetTextureScale()
 	return texScale;
 }
 
+bool TerrainGL::SetTexture(const char* textureFile)
+{
+	return m_texTerrain.Load(textureFile);
+}
+
 void TerrainGL::LoadTerrain()
 {
 	// Load rendering data for terrain model.

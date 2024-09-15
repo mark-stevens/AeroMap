@@ -22,6 +22,8 @@
 #include <QStatusBar>
 #include <QToolBar>
 
+constexpr char* ORTHO_KEY = "Orthophoto";
+
 MainWindow::MainWindow()
 	: mp_DroneWindow(nullptr)
 	, mp_OrthoWindow(nullptr)
@@ -450,6 +452,8 @@ void MainWindow::CreateColorScaleCombo()
 	mp_cboAttrLidar = new QComboBox();
 	mp_cboColorLidar = new QComboBox();
 	mp_cboColorTerrain = new QComboBox();
+
+	mp_cboColorTerrain->addItem(ORTHO_KEY);
 
 	// load all defined color scales
 
@@ -938,8 +942,19 @@ void MainWindow::OnColorIndexChanged(int /* index */)
 	}
 	else if (mp_TerrainWindow)
 	{
-		XString scale = XString::CombinePath(GetApp()->GetAppDataPath(), XString(mp_cboColorTerrain->currentText()));
-		mp_TerrainWindow->SetColorScale(scale.c_str());
+		XString str = mp_cboColorTerrain->currentText();
+		if (str == ORTHO_KEY)
+		{
+			//TODO:
+			//prefer original .tif but file type not currently supported by texture manager
+			XString texFile = XString::CombinePath(tree.odm_report, "ortho.png");
+			mp_TerrainWindow->SetColorImage(texFile.c_str());
+		}
+		else
+		{
+			XString scale = XString::CombinePath(GetApp()->GetAppDataPath(), str.c_str());
+			mp_TerrainWindow->SetColorScale(scale.c_str());
+		}
 	}
 
 	// remember most recent selection

@@ -28,14 +28,13 @@ public:
 	void Save();							// save terrain model
 	void Rebuild(RectType& rectRegion);		// update vertex buffers (vertex/normals only), textures
 	void Rebuild();							// update entire terrain region
-	void UpdateSim(int msec);				// update simulation components
-	void StopSim();
 
 	// terrain texture access
 	void SetPixel(UInt16 x, UInt16 y, PixelType pix);
 	PixelType GetPixel(UInt16 x, UInt16 y);
 	int GetTextureScale();
 	SizeType GetTextureDim();
+	bool SetTexture(const char* textureFile);
 
 	// render states
 	void SetRenderAxes(bool render) { mb_RenderAxes = render; }

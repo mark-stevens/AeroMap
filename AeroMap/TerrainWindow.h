@@ -39,6 +39,7 @@ public:
 	void OnElevation();
 
 	void SetColorScale(const char* scaleFile);
+	void SetColorImage(const char* imageFile);
 
 protected:
 
