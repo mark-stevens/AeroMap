@@ -156,9 +156,18 @@ void StageReport::OutputParameters()
 	y += 200;
 
 	mp_Painter->setFont(m_fontBody);
+	
 	OutputText(m_resolution, y += 200, "DEM Resolution: %0.2f cm/pixel", arg.dem_resolution);
 	OutputText(m_resolution, y += 200, "Orthophoto Resolution: %0.2f cm/pixel", arg.orthophoto_resolution);
 	OutputText(m_resolution, y += 200, "Crop Buffer: %0.2f m", arg.crop);
+	OutputText(m_resolution, y += 200, "DEM Gap Fill Steps: %d", arg.dem_gapfill_steps);
+	
+	OutputText(m_resolution, y += 200, "PC Classify: %s", arg.pc_classify ? "True" : "False");
+	OutputText(m_resolution, y += 200, "PC Rectify: %s", arg.pc_rectify ? "True" : "False");
+	OutputText(m_resolution, y += 200, "PC Filter: %0.2f", arg.pc_filter);
+	OutputText(m_resolution, y += 200, "PC Sample: %0.2f m", arg.pc_sample);
+	OutputText(m_resolution, y += 200, "PC Quality: %s", arg.pc_quality.c_str());
+
 	OutputText(m_resolution, y += 200, "DTM: %s", arg.dtm ? "True" : "False");
 	OutputText(m_resolution, y += 200, "DSM: %s", arg.dsm ? "True" : "False");
 }
