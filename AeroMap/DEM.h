@@ -14,6 +14,7 @@ public:
 
 	static std::vector<double> get_dem_radius_steps(XString stats_file, int steps, double resolution, double multiplier = 1.0);
     static XString classify(XString lasFile, double scalar, double slope, double threshold, double window);
+    static XString compute_euclidean_map(XString geotiff_path, XString output_path, bool overwrite = false);
 };
 
 #endif // #ifndef DEM_H

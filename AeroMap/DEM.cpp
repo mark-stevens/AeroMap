@@ -416,36 +416,44 @@ XString DEM::classify(XString lasFile, double scalar, double slope, double thres
 	return lasFile;
 }
 
-//def compute_euclidean_map(geotiff_path, output_path, overwrite=False):
-//    if not os.path.exists(geotiff_path):
-//        log.ODM_WARNING("Cannot compute euclidean map (file does not exist: %s)" % geotiff_path)
-//        return
-//
-//    nodata = -9999
-//    with rasterio.open(geotiff_path) as f:
-//        nodata = f.nodatavals[0]
-//
-//    if not os.path.exists(output_path) or overwrite:
-//        Logger::Write(__FUNCTION__, ("Computing euclidean distance: %s" % output_path)
-//
-//        if gdal_proximity is not None:
-//            try:
-//                gdal_proximity(['gdal_proximity.py', geotiff_path, output_path, '-values', str(nodata)])
-//            except Exception as e:
-//                log.ODM_WARNING("Cannot compute euclidean distance: %s" % str(e))
-//
-//            if os.path.exists(output_path):
-//                return output_path
-//            else:
-//                log.ODM_WARNING("Cannot compute euclidean distance file: %s" % output_path)
-//        else:
-//            log.ODM_WARNING("Cannot compute euclidean map, gdal_proximity is missing")
-//
-//    else:
-//        Logger::Write(__FUNCTION__, ("Found a euclidean distance map: %s" % output_path)
-//        return output_path
-//
-//
+XString DEM::compute_euclidean_map(XString geotiff_path, XString output_path, bool overwrite)
+{
+	if (QFile::exists(geotiff_path.c_str()) == false)
+	{
+		Logger::Write(__FUNCTION__, "Cannot compute euclidean map (file does not exist: '%s')", geotiff_path.c_str());
+		return "";
+	}
+
+    //nodata = -9999
+    //with rasterio.open(geotiff_path) as f:
+    //    nodata = f.nodatavals[0]
+
+	if ((QFile::exists(output_path.c_str()) == false) || overwrite)
+	{
+		//    Logger::Write(__FUNCTION__, ("Computing euclidean distance: %s" % output_path)
+
+		//    if gdal_proximity is not None:
+		//        try:
+		//            gdal_proximity(['gdal_proximity.py', geotiff_path, output_path, '-values', str(nodata)])
+		//        except Exception as e:
+		//            log.ODM_WARNING("Cannot compute euclidean distance: %s" % str(e))
+
+		//        if os.path.exists(output_path):
+		//            return output_path
+		//        else:
+		//            log.ODM_WARNING("Cannot compute euclidean distance file: %s" % output_path)
+		//    else:
+		//        log.ODM_WARNING("Cannot compute euclidean map, gdal_proximity is missing")
+	}
+	else
+	{
+		Logger::Write(__FUNCTION__, "Found a euclidean distance map: '%s'", output_path.c_str());
+		return output_path;
+	}
+
+	return "";
+}
+
 //def median_smoothing(geotiff_path, output_path, smoothing_iterations=1, window_size=512, num_workers=1):
 //    """ Apply median smoothing """
 //    start = datetime.now()
