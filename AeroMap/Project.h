@@ -42,6 +42,8 @@ struct ArgType
 	double pc_filter;
 	double pc_sample;
 	XString pc_quality;
+	bool pc_csv;
+	bool pc_las;
 
 	double smrf_scalar;
 	double smrf_slope;
@@ -77,6 +79,8 @@ struct TreeType
 
 	XString odm_georef_path;				// root output georef path
 	XString odm_georeferencing_model_laz;
+	XString odm_georeferencing_xyz_file;
+	XString odm_georeferencing_model_las;
 
 	XString odm_dem;						// root output dem path
 	XString odm_dem_dtm;					// .tif files

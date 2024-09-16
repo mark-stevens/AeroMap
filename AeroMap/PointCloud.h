@@ -11,6 +11,8 @@ public:
 
 	static double get_spacing(XString stats_file, double resolution_fallback = 5.0);
 	static RectD  get_extent(XString input_point_cloud);
+
+	static void post_point_cloud_steps();
 };
 
 #endif // #ifndef POINTCLOUD_H

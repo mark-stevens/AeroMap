@@ -2,6 +2,7 @@
 // Georeference point cloud.
 //
 
+#include "PointCloud.h"
 #include "StageGeoref.h"
 
 int StageGeoref::Run()
@@ -19,14 +20,19 @@ int StageGeoref::Run()
 
 	// Export GCP information if available
 
-	//gcp_export_file = tree.path("odm_georeferencing", "ground_control_points.gpkg")
+	XString gcp_export_file = XString::CombinePath("odm_georeferencing", "ground_control_points.gpkg");
 	//gcp_gml_export_file = tree.path("odm_georeferencing", "ground_control_points.gml")
 	//gcp_geojson_export_file = tree.path("odm_georeferencing", "ground_control_points.geojson")
 	//unaligned_model = io.related_file_path(tree.odm_georeferencing_model_laz, postfix="_unaligned")
 	//if os.path.isfile(unaligned_model) and self.rerun():
 	//    os.unlink(unaligned_model)
 	
-	//if reconstruction.has_gcp() and (not io.file_exists(gcp_export_file) or self.rerun()):
+	// gcp_export_file = d:\test_odm\odm_georeferencing\ground_control_points.gpkg
+	// gcp_gml_export_file = d:\test_odm\odm_georeferencing\ground_control_points.gml
+	// gcp_geojson_export_file = d:\test_odm\odm_georeferencing\ground_control_points.geojson
+	// unaligned_model = d:\test_odm\odm_georeferencing\odm_georeferenced_model_unaligned.laz
+
+	if ((GetProject().GetGcpCount() > 0) && (QFile::exists(gcp_export_file.c_str()) == false) || Rerun())
 	{
 		//    octx = OSFMContext(tree.opensfm)
 		//    gcps = octx.ground_control_points(reconstruction.georef.proj4())
@@ -175,7 +181,10 @@ int StageGeoref::Run()
 		    //if reconstruction.has_gcp() and io.file_exists(gcp_geojson_export_file):
 		    //    log.ODM_INFO("Embedding GCP info in point cloud")
 		    //    params += [
-		    //        '--writers.las.vlrs="{\\\"filename\\\": \\\"%s\\\", \\\"user_id\\\": \\\"ODM\\\", \\\"record_id\\\": 1, \\\"description\\\": \\\"Ground Control Points (GeoJSON)\\\"}"' % gcp_geojson_export_file.replace(os.sep, "/")
+		    //        '--writers.las.vlrs="{\\\"filename\\\": \\\"%s\\\", 
+			//								\\\"user_id\\\": \\\"ODM\\\", 
+			//								\\\"record_id\\\": 1, 
+			//								\\\"description\\\": \\\"Ground Control Points (GeoJSON)\\\"}"' % gcp_geojson_export_file.replace(os.sep, "/")
 		    //    ]
 		
 		    if (arg.crop > 0)
@@ -223,11 +232,11 @@ int StageGeoref::Run()
 		//    stats_dir = tree.path("opensfm", "stats", "codem")
 		//    if os.path.exists(stats_dir) and self.rerun():
 		//        shutil.rmtree(stats_dir)
-		//
+		
 		// if tree.odm_align_file is not None:
 		//		[not implemented]
 	
-		//    point_cloud.post_point_cloud_steps(args, tree, self.rerun())
+		PointCloud::post_point_cloud_steps();
 	}
 	else
 	{

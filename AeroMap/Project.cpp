@@ -697,6 +697,12 @@ void Project::InitArg()
 	//				Set point cloud quality. Higher quality generates better, denser point clouds, but requires
 	//				more memory and takes longer. Each step up in quality increases processing time roughly by a
 	//				factor of 4x. Can be one of: ultra, high, medium, low, lowest. Default: medium
+	arg.pc_csv = false;
+	// --pc-csv		Export the georeferenced point cloud in CSV format. Default: False
+	arg.pc_las = false;
+	// --pc-las		Export the georeferenced point cloud in LAS format. Default: False
+	// --pc-ept     Export the georeferenced point cloud in Entwine Point Tile (EPT) format. Default: False
+	// --pc-copc    Save the georeferenced point cloud in Cloud Optimized Point Cloud (COPC) format. Default: False
 
 	arg.use_3dmesh = false;
 	// --use-3dmesh 
@@ -820,11 +826,6 @@ void Project::InitArg()
 	//				Specify the distance between camera shot locations and the outer edge of the boundary when
 	//				computing the boundary with --auto-boundary. Set to 0 to automatically choose a value.
 	//				Default: 0
-	// --pc-csv              Export the georeferenced point cloud in CSV format. Default: False
-	// --pc-las              Export the georeferenced point cloud in LAS format. Default: False
-	// --pc-ept              Export the georeferenced point cloud in Entwine Point Tile (EPT) format. Default: False
-	// --pc-copc             Save the georeferenced point cloud in Cloud Optimized Point Cloud (COPC) format. Default:
-	//				False
 	// --pc-skip-geometric   Geometric estimates improve the accuracy of the point cloud by computing geometrically
 	//				consistent depthmaps but may not be usable in larger datasets. This flag disables geometric
 	//				estimates. Default: False
@@ -978,6 +979,8 @@ void Project::InitTree()
 
 	tree.odm_georef_path = XString::CombinePath(ms_DroneOutputPath, "odm_georeferencing");
 	tree.odm_georeferencing_model_laz = XString::CombinePath(tree.odm_georef_path, "odm_georeferenced_model.laz");
+	tree.odm_georeferencing_model_las = XString::CombinePath(tree.odm_georef_path, "odm_georeferenced_model.las");
+	tree.odm_georeferencing_xyz_file = XString::CombinePath(tree.odm_georef_path, "odm_georeferenced_model.csv");
 
 	tree.odm_dem = XString::CombinePath(ms_DroneOutputPath, "odm_dem");
 	tree.odm_dem_dtm = XString::CombinePath(tree.odm_dem, "dtm.tif");

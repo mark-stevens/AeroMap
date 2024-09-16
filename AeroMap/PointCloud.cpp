@@ -356,43 +356,69 @@ RectD PointCloud::get_extent(XString input_point_cloud)
 //    ]
 //
 //    system.run(' '.join(cmd))
-//
-//def post_point_cloud_steps(args, tree, rerun=False):
-//    # XYZ point cloud output
-//    if args.pc_csv:
-//        log.ODM_INFO("Creating CSV file (XYZ format)")
-//
-//        if not io.file_exists(tree.odm_georeferencing_xyz_file) or rerun:
-//            system.run("pdal translate -i \"{}\" "
-//                "-o \"{}\" "
-//                "--writers.text.format=csv "
-//                "--writers.text.order=\"X,Y,Z\" "
-//                "--writers.text.keep_unspecified=false ".format(
-//                    tree.odm_georeferencing_model_laz,
-//                    tree.odm_georeferencing_xyz_file))
-//        else:
-//            log.ODM_WARNING("Found existing CSV file %s" % tree.odm_georeferencing_xyz_file)
-//
-//    # LAS point cloud output
-//    if args.pc_las:
-//        log.ODM_INFO("Creating LAS file")
-//
-//        if not io.file_exists(tree.odm_georeferencing_model_las) or rerun:
-//            system.run("pdal translate -i \"{}\" "
-//                "-o \"{}\" ".format(
-//                    tree.odm_georeferencing_model_laz,
-//                    tree.odm_georeferencing_model_las))
-//        else:
-//            log.ODM_WARNING("Found existing LAS file %s" % tree.odm_georeferencing_xyz_file)
-//
-//    # EPT point cloud output
-//    if args.pc_ept:
-//        log.ODM_INFO("Creating Entwine Point Tile output")
-//        entwine.build([tree.odm_georeferencing_model_laz], tree.entwine_pointcloud, max_concurrency=args.max_concurrency, rerun=rerun)
-//
-//    # COPC point clouds
-//    if args.pc_copc:
-//        log.ODM_INFO("Creating Cloud Optimized Point Cloud (COPC)")
-//
-//        copc_output = io.related_file_path(tree.odm_georeferencing_model_laz, postfix=".copc")
-//        entwine.build_copc([tree.odm_georeferencing_model_laz], copc_output, convert_rgb_8_to_16=True)
+
+void PointCloud::post_point_cloud_steps()
+{
+	// Export point cloud
+	// 
+
+	// XYZ point cloud output
+	if (arg.pc_csv)
+	{
+		GetApp()->LogWrite("Creating CSV file (XYZ format)");
+		
+		QStringList args;
+		args.push_back("translate");
+		args.push_back("-i");
+		args.push_back(tree.odm_georeferencing_model_laz.c_str());
+		args.push_back("-o");
+		args.push_back(tree.odm_georeferencing_xyz_file.c_str());
+		args.push_back("--writers.text.format=csv");
+		args.push_back("--writers.text.order=\"X,Y,Z\"");
+		args.push_back("--writers.text.keep_unspecified=false");
+		AeroLib::RunProgramEnv(tree.prog_pdal, args);
+
+		//system.run("pdal translate -i \"{}\" "
+		//        "-o \"{}\" "
+		//        "--writers.text.format=csv "
+		//        "--writers.text.order=\"X,Y,Z\" "
+		//        "--writers.text.keep_unspecified=false ".format(
+		//            tree.odm_georeferencing_model_laz,
+		//            tree.odm_georeferencing_xyz_file))
+	}
+
+	// LAS point cloud output
+	if (arg.pc_las)
+	{
+		GetApp()->LogWrite("Creating LAS file");
+
+		QStringList args;
+		args.push_back("translate");
+		args.push_back("-i");
+		args.push_back(tree.odm_georeferencing_model_laz.c_str());
+		args.push_back("-o");
+		args.push_back(tree.odm_georeferencing_model_las.c_str());
+		AeroLib::RunProgramEnv(tree.prog_pdal, args);
+
+		//    system.run("pdal translate -i \"{}\" "
+		//        "-o \"{}\" ".format(
+		//            tree.odm_georeferencing_model_laz,
+		//            tree.odm_georeferencing_model_las))
+	}
+
+	// EPT point cloud output
+	// if args.pc_ept:
+	{
+		// log.ODM_INFO("Creating Entwine Point Tile output")
+		// entwine.build([tree.odm_georeferencing_model_laz], tree.entwine_pointcloud, max_concurrency=args.max_concurrency, rerun=rerun)
+	}
+
+	// COPC point clouds
+	// if args.pc_copc:
+	{
+		//log.ODM_INFO("Creating Cloud Optimized Point Cloud (COPC)")
+		//
+		//copc_output = io.related_file_path(tree.odm_georeferencing_model_laz, postfix=".copc")
+		//entwine.build_copc([tree.odm_georeferencing_model_laz], copc_output, convert_rgb_8_to_16=True)
+	}
+}
