@@ -453,6 +453,9 @@
     <ClCompile Include="Release\moc_TerrainWindow.cpp">
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
+    <ClCompile Include="Thermal.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="ConfigDlg.h">
@@ -775,6 +778,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TerrainGL.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Thermal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

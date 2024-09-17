@@ -419,6 +419,7 @@
     <ClCompile Include="Terrain.cpp" />
     <ClCompile Include="TerrainGL.cpp" />
     <ClCompile Include="TerrainWindow.cpp" />
+    <ClCompile Include="Thermal.cpp" />
     <ClCompile Include="Tool.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -639,6 +640,7 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
     </CustomBuild>
+    <ClInclude Include="Thermal.h" />
     <ClInclude Include="Version.h" />
     <CustomBuild Include="ProjectWindow.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>

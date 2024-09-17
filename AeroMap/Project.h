@@ -136,6 +136,8 @@ public:
 		XString camera_str_odm;			// camera id string, odm format
 
 		ImageType()
+			: focal_ratio(0.0)
+			, epoch(0)
 		{
 		}
 	};
