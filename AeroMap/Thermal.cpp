@@ -16,24 +16,30 @@ cv::Mat Thermal::resize_to_match(cv::Mat image, Project::ImageType match_photo)
 	// Resize images to match the dimension of another photo
 	// 
 	// Inputs:
-	//    image = numpy array containing image data to resize
-	//    match_photo = ODM_Photo whose dimensions should be used for resize
+	//    image			= image data to resize
+	//    match_photo	= photo whose dimensions should be used for resize
 	// Outputs:
-	//    return = numpy array with resized image data
+	//    return		= resized image
 	//
 	
-	// if match_photo is not None:
-	{
-		int w = image.cols;
-		int h = image.rows;
+	int w = image.cols;
+	int h = image.rows;
 		
-		if ((w != match_photo.exif.ImageWidth) || (h != match_photo.exif.ImageHeight))
-		{
-			//    image = cv2.resize(image, None,
-			//            fx=match_photo.width/w,
-			//            fy=match_photo.height/h,
-			//            interpolation=cv2.INTER_LANCZOS4)
-		}
+	if ((w != match_photo.exif.ImageWidth) || (h != match_photo.exif.ImageHeight))
+	{
+		double fx = (double)match_photo.exif.ImageWidth / (double)w;
+		double fy = (double)match_photo.exif.ImageHeight / (double)h;
+
+		cv::Mat mat;
+		cv::Size dsize(0, 0);	// None in python
+		cv::resize(image, mat, dsize, fx, fy, cv::INTER_LANCZOS4);
+		
+		//    image = cv2.resize(image, None,
+		//            fx=match_photo.width/w,
+		//            fy=match_photo.height/h,
+		//            interpolation=cv2.INTER_LANCZOS4)
+
+		return mat;
 	}
 
 	return image;
@@ -44,16 +50,17 @@ cv::Mat Thermal::dn_to_temperature(Project::ImageType photo, cv::Mat image, XStr
 	// Convert Digital Number values to temperature (C) values
 	// 
 	// Inputs:
-	//    :param photo ODM_Photo
-	//    :param image numpy array containing image data
-	//    :param images_path path to original source image to read data using PIL for DJI thermal photos
+	//    photo			= ODM_Photo
+	//    image			= numpy array containing image data
+	//    images_path	= path to original source image to read data using PIL for DJI thermal photos
 	// Outputs:
-	//    :return numpy array with temperature (C) image values
+	//    return = numpy array with temperature (C) image values
 	//
 
-	//    # Handle thermal bands
+	// Handle thermal bands
 	//    if photo.is_thermal():
-	//        # Every camera stores thermal information differently
+	{
+		//        # Every camera stores thermal information differently
 	//        # The following will work for MicaSense Altum cameras
 	//        # but not necessarily for others
 	//        if photo.camera_make == "MicaSense" and photo.camera_model == "Altum":
@@ -84,10 +91,13 @@ cv::Mat Thermal::dn_to_temperature(Project::ImageType photo, cv::Mat image, XStr
 	//
 	//            image = image.astype("float32")
 	//            return image
+	}
 	//    else:
-	//        image = image.astype("float32")
+	{
+		//        image = image.astype("float32")
 	//        log.ODM_WARNING("Tried to radiometrically calibrate a non-thermal image with temperature values (%s)" % photo.filename)
 	//        return image
+	}
 
 	return image;
 }
