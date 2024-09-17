@@ -13,6 +13,7 @@ public:
 	static RectD  get_extent(XString input_point_cloud);
 
 	static void post_point_cloud_steps();
+	static void export_summary_json(XString pointcloud_path, XString summary_file_path);
 };
 
 #endif // #ifndef POINTCLOUD_H

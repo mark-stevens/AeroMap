@@ -7,6 +7,7 @@
 using json = nlohmann::json;
 
 #include "AeroLib.h"
+#include "PointCloud.h"
 #include "Cropper.h"
 
 Cropper::Cropper(XString storage_dir, XString files_prefix)
@@ -269,7 +270,7 @@ XString Cropper::create_bounds_gpkg(XString pointcloud_path, double buffer_dista
 	XString bounds_geojson_path = create_bounds_geojson(pointcloud_path, buffer_distance, decimation_step);
 	
 	XString summary_file_path = XString::CombinePath(m_storage_dir, XString::Format("%s.summary.json", m_files_prefix.c_str()));
-	//export_summary_json(pointcloud_path, summary_file_path)
+	PointCloud::export_summary_json(pointcloud_path, summary_file_path);
 	
 	json pc_proj4 = nullptr;
 	//    with open(summary_file_path, 'r') as f:
@@ -284,10 +285,10 @@ XString Cropper::create_bounds_gpkg(XString pointcloud_path, double buffer_dista
 	
 	XString bounds_gpkg_path = XString::CombinePath(m_storage_dir, XString::Format("%s.bounds.gpkg", m_files_prefix.c_str()));
 
-	//    if os.path.isfile(bounds_gpkg_path):
-	//        os.remove(bounds_gpkg_path)
+	if (QFile::exists(bounds_gpkg_path.c_str()))
+		QFile::remove(bounds_gpkg_path.c_str());
 
-	//    # Convert bounds to GPKG
+	// Convert bounds to GPKG
 	//    kwargs = {
 	//        'input': double_quote(bounds_geojson_path),
 	//        'output': double_quote(bounds_gpkg_path),
@@ -306,12 +307,13 @@ void Cropper::merge_bounds(XString input_bound_files, XString output_bounds, dou
 	//
 	
 	//geomcol = ogr.Geometry(ogr.wkbGeometryCollection)
-	//
+	
 	//driver = ogr.GetDriverByName('GPKG')
 	//srs = None
-	//
+	
 	//for input_bound_file in input_bound_files:
-	//    ds = driver.Open(input_bound_file, 0) # ready-only
+	{
+		//    ds = driver.Open(input_bound_file, 0) # ready-only
 	//
 	//    layer = ds.GetLayer()
 	//    srs = layer.GetSpatialRef()
@@ -321,35 +323,36 @@ void Cropper::merge_bounds(XString input_bound_files, XString output_bounds, dou
 	//        geomcol.AddGeometry(feature.GetGeometryRef())
 	//
 	//    ds = None
-	//
-	//# Calculate convex hull
-	//convexhull = geomcol.ConvexHull()
-	//
-	//# If buffer distance is specified
-	//# Create two buffers, one shrunk by
-	//# N + 3 and then that buffer expanded by 3
-	//# so that we get smooth corners. \m/
-	const double BUFFER_SMOOTH_DISTANCE = 3.0;
-	
-	//    if buffer_distance > 0:
-	{
-		//        convexhull = convexhull.Buffer(-(buffer_distance + BUFFER_SMOOTH_DISTANCE))
-	//        convexhull = convexhull.Buffer(BUFFER_SMOOTH_DISTANCE)
 	}
 
-	//# Save to a new file
+	// Calculate convex hull
+	//convexhull = geomcol.ConvexHull()
+	//
+	// If buffer distance is specified
+	// Create two buffers, one shrunk by
+	// N + 3 and then that buffer expanded by 3
+	// so that we get smooth corners. \m/
+	const double BUFFER_SMOOTH_DISTANCE = 3.0;
+	
+	if (buffer_distance > 0)
+	{
+		// convexhull = convexhull.Buffer(-(buffer_distance + BUFFER_SMOOTH_DISTANCE))
+		// convexhull = convexhull.Buffer(BUFFER_SMOOTH_DISTANCE)
+	}
+
+	// Save to a new file
 	//if os.path.exists(output_bounds):
 	//    driver.DeleteDataSource(output_bounds)
-	//
+	
 	//out_ds = driver.CreateDataSource(output_bounds)
 	//layer = out_ds.CreateLayer("convexhull", srs=srs, geom_type=ogr.wkbPolygon)
-	//
+	
 	//feature_def = layer.GetLayerDefn()
 	//feature = ogr.Feature(feature_def)
 	//feature.SetGeometry(convexhull)
 	//layer.CreateFeature(feature)
 	//feature = None
-	//
-	//# Save and close output data source
+	
+	// Save and close output data source
 	//out_ds = None
 }

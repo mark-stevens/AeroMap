@@ -265,10 +265,17 @@ RectD PointCloud::get_extent(XString input_point_cloud)
 //def export_info_json(pointcloud_path, info_file_path):
 //    system.run('pdal info --dimensions "X,Y,Z" "{0}" > "{1}"'.format(pointcloud_path, info_file_path))
 //
-//
-//def export_summary_json(pointcloud_path, summary_file_path):
-//    system.run('pdal info --summary "{0}" > "{1}"'.format(pointcloud_path, summary_file_path))
-//
+
+void PointCloud::export_summary_json(XString pointcloud_path, XString summary_file_path)
+{
+	QStringList args;
+	args.push_back("info");
+	args.push_back("--summary");
+	args.push_back(pointcloud_path.c_str());
+	AeroLib::RunProgramEnv(tree.prog_pdal, args, summary_file_path);
+	// system.run('pdal info --summary "{0}" > "{1}"'.format(pointcloud_path, summary_file_path))
+}
+
 //def merge(input_point_cloud_files, output_file, rerun=False):
 //    num_files = len(input_point_cloud_files)
 //    if num_files == 0:
