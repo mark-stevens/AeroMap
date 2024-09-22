@@ -1,10 +1,9 @@
 // OdmOrthophot.cpp
 // ODM program to generate orthophoto.
 //
-// The OdmOrthoPhoto class is used to create an orthographic photo over a given area.
-// The class reads an oriented textured mesh from an OBJ-file.
-// The class uses file read from pcl.
-// The class uses image read and write from opencv.
+// reads an oriented textured mesh from an OBJ-file
+// uses file read from pcl
+// uses image read and write from opencv
 //
 
 #include <math.h>
@@ -18,16 +17,13 @@
 #include "OdmOrthoPhoto.h"
 
 OdmOrthoPhoto::OdmOrthoPhoto()
+	: currentBandIndex(0)
+	, m_Resolution(0.0f)
+	, mp_AlphaBand(nullptr)
 {
 	m_OutputFile = "ortho.tif";
-	logFile_ = "log.txt";
 	m_OutputCornerFile = "";
 	m_BandsOrder = "red,green,blue";
-
-	m_Resolution = 0.0f;
-
-	alphaBand = nullptr;
-	currentBandIndex = 0;
 }
 
 OdmOrthoPhoto::~OdmOrthoPhoto()
@@ -59,7 +55,7 @@ int OdmOrthoPhoto::CreateOrthoPhoto()
 	//    bool multiMaterial_ = 1 < mesh.tex_materials.size();
 	    bool splitModel = false;
 
-	//    if(multiMaterial_)
+	//    if (multiMaterial_)
 	//    {
 	//        // Need to check relationship between texture coordinates and faces.
 	//        if(!isModelOk(mesh))
@@ -183,7 +179,7 @@ int OdmOrthoPhoto::CreateOrthoPhoto()
 	//    Logger::Write(__FUNCTION__, ".. mesh translated and scaled.\n\n";
 
 	    // Flatten texture coordinates.
-	//    std::vector<Eigen::Vector2f> uvs;
+	 //   std::vector<Eigen::Vector2f> uvs;
 	//    uvs.reserve(mesh.tex_coordinates.size());
 	//    for(size_t t = 0; t < mesh.tex_coordinates.size(); ++t)
 	//    {
@@ -191,10 +187,10 @@ int OdmOrthoPhoto::CreateOrthoPhoto()
 	//    }
 
 	    // The current material texture
-	//    cv::Mat texture;
+	    cv::Mat texture;
 
 	    // Used to keep track of the global face index.
-	    size_t faceOff = 0;
+	    //size_t faceOff = 0;
 
 	    Logger::Write(__FUNCTION__, "Rendering the ortho photo...");
 
@@ -311,8 +307,9 @@ int OdmOrthoPhoto::CreateOrthoPhoto()
 	    saveTIFF(m_OutputFile, GDT_Float32);
 	}else
 	{
-	//    std::cerr << "Unsupported bit depth value: " << textureDepth;
-	//    exit(1);
+		Logger::Write(__FUNCTION__, "Unsupported bit depth value: %d", textureDepth);
+		assert(false);
+		return -2;
 	}
 
 	if (!m_OutputCornerFile.empty())
@@ -335,16 +332,17 @@ int OdmOrthoPhoto::CreateOrthoPhoto()
 
 //Bounds OdmOrthoPhoto::computeBoundsForModel(const pcl::TextureMesh &mesh)
 //{
-	/*!
-	  * \brief Compute the boundary points so that the entire model fits inside the photo.
-	  *
-	  * \param mesh The model which decides the boundary.
-	  */
+	// Compute the boundary points so that the entire model fits inside the photo.
+	//
+	// Inputs:
+	//		mesh	= model which decides the boundary
+	//
+
 	  //    Logger::Write(__FUNCTION__, "Set boundary to contain entire model.\n";
-//
-//    // The boundary of the model.
+
+    // The boundary of the model.
 //    Bounds r;
-//
+
 //    r.xMin = std::numeric_limits<float>::infinity();
 //    r.xMax = -std::numeric_limits<float>::infinity();
 //    r.yMin = std::numeric_limits<float>::infinity();
@@ -538,24 +536,24 @@ int OdmOrthoPhoto::CreateOrthoPhoto()
 //            botR = v1y; botC = v1x;
 //        }
 //    }
-//
-//    // General appreviations:
-//    // ---------------------
-//    // tm : Top(to)Middle.
-//    // mb : Middle(to)Bottom.
-//    // tb : Top(to)Bottom.
-//    // c  : column.
-//    // r  : row.
-//    // dr : DeltaRow, step value per row.
-//
-//    // The step along column for every step along r. Top to middle.
-//    float ctmdr;
-//    // The step along column for every step along r. Top to bottom.
-//    float ctbdr;
-//    // The step along column for every step along r. Middle to bottom.
-//    float cmbdr;
-//
-//    ctbdr = (botC-topC)/(botR-topR);
+
+    // General appreviations:
+    // ---------------------
+    // tm : Top(to)Middle.
+    // mb : Middle(to)Bottom.
+    // tb : Top(to)Bottom.
+    // c  : column.
+    // r  : row.
+    // dr : DeltaRow, step value per row.
+
+		// The step along column for every step along r. Top to middle.
+	float ctmdr;
+	// The step along column for every step along r. Top to bottom.
+	float ctbdr;
+	// The step along column for every step along r. Middle to bottom.
+	float cmbdr;
+
+	//ctbdr = (botC - topC) / (botR - topR);
 
 //    // The current column position, from top to middle.
 //    float ctm = topC;
@@ -680,15 +678,15 @@ int OdmOrthoPhoto::CreateOrthoPhoto()
 template <typename T>
 void OdmOrthoPhoto::renderPixel(int row, int col, float s, float t, const cv::Mat &texture)
 {
-	///*!
-//  * \brief Sets the color of a pixel in the photo.
-//  *
-//  * \param row The row index of the pixel.
-//  * \param col The column index of the pixel.
-//  * \param s The u texture-coordinate, multiplied with the number of columns in the texture.
-//  * \param t The v texture-coordinate, multiplied with the number of rows in the texture.
-//  * \param texture The texture from which to get the color.
-//  **/
+	// Sets the color of a pixel in the photo.
+	//
+	// Inputs:
+	//		row The row index of the pixel.
+	//		col The column index of the pixel.
+	//		s The u texture-coordinate, multiplied with the number of columns in the texture.
+	//		t The v texture-coordinate, multiplied with the number of rows in the texture.
+	//		texture The texture from which to get the color.
+	//
 
     // The offset of the texture coordinate from its pixel positions.
     float leftF, topF;
@@ -732,23 +730,23 @@ void OdmOrthoPhoto::renderPixel(int row, int col, float s, float t, const cv::Ma
     // Increment the alpha band if the pixel was visible for this band
     // the final alpha band will be set to 255 if alpha == num bands
     // (all bands have information at this pixel)
-    static_cast<T *>(alphaBand)[idx] += static_cast<T>(numChannels);
+    static_cast<T *>(mp_AlphaBand)[idx] += static_cast<T>(numChannels);
 }
 
 void OdmOrthoPhoto::getBarycentricCoordinates(VEC3 v1, VEC3 v2, VEC3 v3, float x, float y, float &l1, float &l2, float &l3) const
 {
-	///*!
-	//  * \brief Calculates the barycentric coordinates of a point in a triangle.
-	//  *
-	//  * \param v1 The first triangle vertex.
-	//  * \param v2 The second triangle vertex.
-	//  * \param v3 The third triangle vertex.
-	//  * \param x The x coordinate of the point.
-	//  * \param y The y coordinate of the point.
-	//  * \param l1 The first vertex weight.
-	//  * \param l2 The second vertex weight.
-	//  * \param l3 The third vertex weight.
-	//  */
+	// Calculates the barycentric coordinates of a point in a triangle.
+	//
+	// Inputs:
+	//		v1 The first triangle vertex.
+	//		v2 The second triangle vertex.
+	//		v3 The third triangle vertex.
+	//		x The x coordinate of the point.
+	//		y The y coordinate of the point.
+	//		l1 The first vertex weight.
+	//		l2 The second vertex weight.
+	//		l3 The third vertex weight.
+	//
 
 	// Diff along y.
 	float y2y3 = v2.y-v3.y;
@@ -789,7 +787,7 @@ bool OdmOrthoPhoto::isSliverPolygon(VEC3 v1, VEC3 v2, VEC3 v3) const
 	///*!
 	//  * \brief Check if the model is suitable for ortho photo generation.
 	//  *
-	//  * \param mesh The model.
+	// mesh The model.
 	//  * \return True if the model is ok for generating ortho photo.
 	//  */
 //    // The number of texture coordinates in the model.
@@ -816,8 +814,8 @@ bool OdmOrthoPhoto::isSliverPolygon(VEC3 v1, VEC3 v2, VEC3 v3) const
 	///*!
 	//  * \brief Loads a model from an .obj file (replacement for the pcl obj loader).
 	//  *
-	//  * \param inputFile Path to the .obj file.
-	//  * \param mesh The model.
+	// inputFile Path to the .obj file.
+	// mesh The model.
 	//  * \return True if model was loaded successfully.
 	//  */
 
@@ -1197,12 +1195,12 @@ void OdmOrthoPhoto::saveTIFF(const std::string& filename, GDALDataType dataType)
 	}
 	char** papszOptions = NULL;
 	GDALDatasetH hDstDS = GDALCreate(hDriver, filename.c_str(), width, height,
-		static_cast<int>(bands.size() + 1), dataType, papszOptions);
+		static_cast<int>(m_bands.size() + 1), dataType, papszOptions);
 	GDALRasterBandH hBand;
 
 	// Bands
 	size_t i = 0;
-	for (; i < bands.size(); ++i)
+	for (; i < m_bands.size(); ++i)
 	{
 		hBand = GDALGetRasterBand(hDstDS, static_cast<int>(i) + 1);
 
@@ -1219,7 +1217,7 @@ void OdmOrthoPhoto::saveTIFF(const std::string& filename, GDALDataType dataType)
 		}
 
 		if (GDALRasterIO(hBand, GF_Write, 0, 0, width, height,
-			bands[i], width, height, dataType, 0, 0) != CE_None)
+			m_bands[i], width, height, dataType, 0, 0) != CE_None)
 		{
 			//std::cerr << "Cannot write TIFF to " << filename << std::endl;
 			exit(1);
@@ -1251,7 +1249,7 @@ void OdmOrthoPhoto::saveTIFF(const std::string& filename, GDALDataType dataType)
 	GDALSetRasterColorInterpretation(hBand, GCI_AlphaBand);
 
 	if (GDALRasterIO(hBand, GF_Write, 0, 0, width, height,
-		alphaBand, width, height, dataType, 0, 0) != CE_None)
+		mp_AlphaBand, width, height, dataType, 0, 0) != CE_None)
 	{
 		//std::cerr << "Cannot write TIFF (alpha) to " << filename << std::endl;
 		exit(1);
@@ -1288,14 +1286,14 @@ void OdmOrthoPhoto::initAlphaBand()
 {
 	size_t pixelCount = static_cast<size_t>(width) * static_cast<size_t>(height);
 	// Alpha
-	if (alphaBand == nullptr)
+	if (mp_AlphaBand == nullptr)
 	{
 		T* arr = new T[pixelCount];
 		for (size_t j = 0; j < pixelCount; j++)
 		{
 			arr[j] = 0.0;
 		}
-		alphaBand = static_cast<void*>(arr);
+		mp_AlphaBand = static_cast<void*>(arr);
 	}
 }
 
@@ -1306,9 +1304,9 @@ void OdmOrthoPhoto::finalizeAlphaBand()
 	// values on all bands should be visible
 
 	size_t pixelCount = static_cast<size_t>(width) * static_cast<size_t>(height);
-	int channels = (int)bands.size();
+	int channels = (int)m_bands.size();
 
-	T* arr = reinterpret_cast<T*>(alphaBand);
+	T* arr = reinterpret_cast<T*>(mp_AlphaBand);
 	for (size_t j = 0; j < pixelCount; j++)
 	{
 		arr[j] = arr[j] >= channels ? 255.0 : 0.0;

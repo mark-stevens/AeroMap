@@ -99,17 +99,16 @@ private:
     //                 std::vector<pcl::MTLReader> &companions);
 
     std::vector<std::string> m_InputFiles;
-    std::string     m_OutputFile;               // Path to the destination file
-    std::string     m_OutputCornerFile;         // Path to the output corner file
-    std::string     logFile_;                   // Path to the log file
-    std::string     m_BandsOrder;
+    std::string m_OutputFile;               // Path to the destination file
+    std::string m_OutputCornerFile;         // Path to the output corner file
+    std::string m_BandsOrder;
 
-    float           m_Resolution;               // number of pixels per meter in the ortho photo
+    float m_Resolution;               // number of pixels per meter in the ortho photo
 
-    std::vector<void *>    bands;
+    std::vector<void *> m_bands;
     std::vector<GDALColorInterp> colorInterps;
     std::vector<std::string> bandDescriptions;
-    void *alphaBand;                            // Keep alpha band separate
+    void* mp_AlphaBand;                            // Keep alpha band separate
     int currentBandIndex;
 
     cv::Mat depth_;                             // depth of the ortho photo as an OpenCV matrix, CV_32F
