@@ -456,6 +456,9 @@
     <ClCompile Include="Thermal.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="OdmOrthoPhoto.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="ConfigDlg.h">
@@ -781,6 +784,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Thermal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OdmOrthoPhoto.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

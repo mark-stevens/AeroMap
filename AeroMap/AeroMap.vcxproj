@@ -63,7 +63,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>.\GeneratedFiles;.\;.\Stages;..\Common;..\Lib\libgeotiff-1.6.0;..\Lib\libgeotiff-1.6.0/libxtiff;..\Lib\gdal-3.2.1\gcore;..\Lib\gdal-3.2.1\port;..\Lib\gdal-3.2.1\ogr;..\Lib\gdal-3.2.1\ogr\vector_frmts;..\Lib\gdal-3.2.1\alg;..\Lib\pdal-2.3\vendor\nlohmann;..\Lib\pdal-2.3;..\Lib\laslib\inc;..\Lib\laszip\src;..\Lib\tiff-4.0.10\libtiff;..\Lib\libpng-1.6.20;..\Lib\zlib;..\Lib\jpeg-9a;..\Lib\glm-0.9.7.2;..\Lib\glew-2.2.0/include;$(OPENCV_PATH)\build\include;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtSvg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\GeneratedFiles;.\;.\Stages;..\Common;..\Lib\libgeotiff-1.6.0;..\Lib\libgeotiff-1.6.0/libxtiff;..\Lib\gdal-3.2.1\gcore;..\Lib\gdal-3.2.1\port;..\Lib\gdal-3.2.1\ogr;..\Lib\gdal-3.2.1\ogr\vector_frmts;..\Lib\gdal-3.2.1\alg;..\Lib\pdal-2.3\vendor\eigen;..\Lib\pdal-2.3\vendor\nlohmann;..\Lib\pdal-2.3;..\Lib\laslib\inc;..\Lib\laszip\src;..\Lib\tiff-4.0.10\libtiff;..\Lib\libpng-1.6.20;..\Lib\zlib;..\Lib\jpeg-9a;..\Lib\glm-0.9.7.2;..\Lib\glew-2.2.0/include;$(OPENCV_PATH)\build\include;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtSvg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>debug\</AssemblerListingLocation>
       <BrowseInformation>false</BrowseInformation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -264,6 +264,7 @@
     <ClCompile Include="LidarModelDlg.cpp" />
     <ClCompile Include="LidarWindow.cpp" />
     <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="OdmOrthoPhoto.cpp" />
     <ClCompile Include="OrthoWindow.cpp" />
     <ClCompile Include="PointCloud.cpp" />
     <ClCompile Include="ProfileWindow.cpp" />
@@ -528,6 +529,7 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
     </CustomBuild>
+    <ClInclude Include="OdmOrthoPhoto.h" />
     <ClInclude Include="PointCloud.h" />
     <ClInclude Include="RasterFile.h" />
     <CustomBuild Include="ContourDlg.h">
