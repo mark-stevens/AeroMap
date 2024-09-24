@@ -112,10 +112,11 @@ void ProjectWindow::UpdateUI()
 	mp_ItemDroneInput->setToolTip(0, str.c_str());
 	mp_ItemDroneRoot->addChild(mp_ItemDroneInput);
 
-	str = XString::Format("GCP File: %s", arg.gcp.GetLength() > 0 ? arg.gcp.c_str() : "---");
-	mp_ItemGcpFile = new QTreeWidgetItem(QStringList(str.c_str()), static_cast<int>(ItemType::GcpFile));
-	mp_ItemGcpFile->setToolTip(0, str.c_str());
-	mp_ItemDroneRoot->addChild(mp_ItemGcpFile);
+	// GCPs not implemented & i'm not sure this is good ui anyway
+	//str = XString::Format("GCP File: %s", arg.gcp.GetLength() > 0 ? arg.gcp.c_str() : "---");
+	//mp_ItemGcpFile = new QTreeWidgetItem(QStringList(str.c_str()), static_cast<int>(ItemType::GcpFile));
+	//mp_ItemGcpFile->setToolTip(0, str.c_str());
+	//mp_ItemDroneRoot->addChild(mp_ItemGcpFile);
 
 	str = XString::Format("Output Path: %s", GetProject().GetDroneOutputPath().c_str());
 	if (QFile::exists(GetProject().GetDroneOutputPath().c_str()) == false)

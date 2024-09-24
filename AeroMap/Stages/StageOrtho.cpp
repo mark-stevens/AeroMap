@@ -142,7 +142,8 @@ int StageOrtho::Run()
         args.push_back(XString::Format("NUM_THREADS=%d", arg.max_concurrency).c_str());
         args.push_back("--config");
         args.push_back("GDAL_CACHEMAX");
-        args.push_back("10411063296.0");        //TODO: (get_max_memory_mb() * 1024 * 1024)
+        unsigned long long max_mem = AeroLib::get_max_memory_bytes();
+        args.push_back(XString::Format("%0.1f", (double)max_mem).c_str());
         args.push_back("-verbose");
         AeroLib::RunProgramEnv(tree.prog_orthophoto, args);
         // cmd: odm_orthophoto 

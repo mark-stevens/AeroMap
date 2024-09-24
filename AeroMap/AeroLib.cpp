@@ -536,4 +536,74 @@ namespace AeroLib
 
 		return result;
 	}
+
+	unsigned long long get_max_memory_bytes(int minimum, double use_at_most)
+	{
+		// Inputs:
+		//		minimum = minimum value to return (return value will never be lower than this)
+		//		use_at_most = use at most this fraction of the available memory. 0.5 = use at most 50% of available memory
+		// Outputs:
+		//		return = value of memory to use, bytes
+		//
+
+		// typedef struct _MEMORYSTATUSEX {
+		//		DWORD dwLength;						// Size of the structure, in bytes. You must set this member before calling	GlobalMemoryStatusEx.
+		//		DWORD dwMemoryLoad;					// Number between 0 and 100 that specifies the approximate percentage of physical memory that is in use
+		//		DWORDLONG ullTotalPhys;				// Amount of actual physical memory, in bytes.	
+		//		DWORDLONG ullAvailPhys;				// Amount of physical memory currently available, in bytes. 
+		//											// This is the amount of physical memory that can be immediately reused without having to write its contents to disk first. 
+		//											// It is the sum of the size of the standby, free, and zero lists.
+		//		DWORDLONG ullTotalPageFile;			// Current committed memory limit for the system or the current process, whichever is smaller, in bytes
+		//		DWORDLONG ullAvailPageFile;			// Maximum amount of memory the current process can commit, in bytes
+		//		DWORDLONG ullTotalVirtual;			// Size of the user-mode portion of the virtual address space of the calling process, in bytes. This value depends on the type of process, 
+		//											// the type of processor, and the configuration of the operating system.
+		//		DWORDLONG ullAvailVirtual;			// Amount of unreserved and uncommitted memory currently in the user-mode portion of the virtual address space of the calling process, in bytes.
+		//		DWORDLONG ullAvailExtendedVirtual;	// Reserved
+		// } MEMORYSTATUSEX, * LPMEMORYSTATUSEX;
+
+		MEMORYSTATUSEX memory_status;
+		ZeroMemory(&memory_status, sizeof(MEMORYSTATUSEX));
+		memory_status.dwLength = sizeof(MEMORYSTATUSEX);
+		if (GlobalMemoryStatusEx(&memory_status))
+		{
+			Logger::Write(__FUNCTION__, "GlobalMemoryStatusEx():");
+			Logger::Write(__FUNCTION__, "    Total RAM: %ull MB", memory_status.ullTotalPhys / (1024 * 1024));
+			Logger::Write(__FUNCTION__, "    Avail RAM: %ull MB", memory_status.ullAvailPhys / (1024 * 1024));
+			Logger::Write(__FUNCTION__, "    Total Virtual: %ull MB", memory_status.ullTotalVirtual / (1024 * 1024));
+			Logger::Write(__FUNCTION__, "    Avail Virtual: %ull MB", memory_status.ullAvailVirtual / (1024 * 1024));
+		}
+		else
+		{
+			Logger::Write(__FUNCTION__, "GlobalMemoryStatusEx() call failed.");
+		}
+
+		unsigned long long vmem_avail = memory_status.ullAvailVirtual;
+		unsigned long long vmem_max = (unsigned long long)(vmem_avail * use_at_most);
+		return std::max((unsigned long long)minimum, vmem_max);
+	}
+
+	double get_max_memory_percent(double minimum, double use_at_most)
+	{
+		// Inputs:
+		//		minimum minimum value to return (return value will never be lower than this)
+		//		use_at_most use at most this fraction of the available memory. 0.5 = use at most 50 % of available memory
+		// Outputs:
+		//		return = percentage value of memory to use (75 = 75 %).
+		//
+
+		MEMORYSTATUSEX memory_status;
+		ZeroMemory(&memory_status, sizeof(MEMORYSTATUSEX));
+		memory_status.dwLength = sizeof(MEMORYSTATUSEX);
+		if (GlobalMemoryStatusEx(&memory_status) == false)
+		{
+			Logger::Write(__FUNCTION__, "GlobalMemoryStatusEx() call failed.");
+		}
+
+		unsigned long long vmem_total = memory_status.ullTotalVirtual;
+		unsigned long long vmem_avail = memory_status.ullAvailVirtual;
+		double percent_avail = (double)vmem_avail / (double)vmem_total;
+		percent_avail *= 100.0;
+
+		return std::max(minimum, percent_avail * use_at_most);
+	}
 }

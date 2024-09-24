@@ -45,6 +45,9 @@ namespace AeroLib
 
 	CPLErr gdal_fillnodata(XString src_file, XString dst_file, 
 		double max_distance = 100.0, int smooth_iterations = 0, int src_band = 1, XString format = "GTiff");
+
+	unsigned long long get_max_memory_bytes(int minimum = 100, double use_at_most = 0.5);
+	double get_max_memory_percent(double minimum = 5.0, double use_at_most = 0.5);
 }
 
 #endif // #ifndef AEROLIB_H

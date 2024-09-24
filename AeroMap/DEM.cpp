@@ -240,7 +240,7 @@ void DEM::create_dem(XString input_point_cloud, XString dem_type, std::vector<do
 		args.push_back("BIGTIFF=IF_SAFER");
 		args.push_back("--config");
 		args.push_back("GDAL_CACHEMAX");
-		args.push_back("30%");						//TODO: get_max_memory(),
+		args.push_back(XString::Format("%0.1f%%", AeroLib::get_max_memory_percent()).c_str());
 		args.push_back(tiles_vrt_path.c_str());
 		args.push_back(geotiff_tmp_path.c_str());
 		AeroLib::RunProgramEnv(tree.prog_gdal_translate, args);
@@ -261,7 +261,7 @@ void DEM::create_dem(XString input_point_cloud, XString dem_type, std::vector<do
 		args.push_back("BIGTIFF=IF_SAFER");
 		args.push_back("--config");
 		args.push_back("GDAL_CACHEMAX");
-		args.push_back("30%");						//TODO: get_max_memory(),
+		args.push_back(XString::Format("%0.1f%%", AeroLib::get_max_memory_percent()).c_str());
 		args.push_back("-outsize");
 		args.push_back("10%");
 		args.push_back("0");
@@ -307,7 +307,7 @@ void DEM::create_dem(XString input_point_cloud, XString dem_type, std::vector<do
 		args.push_back("BIGTIFF=IF_SAFER");
 		args.push_back("--config");
 		args.push_back("GDAL_CACHEMAX");
-		args.push_back("30%");						//TODO: get_max_memory(),
+		args.push_back(XString::Format("%0.1f%%", AeroLib::get_max_memory_percent()).c_str());
 		args.push_back(merged_vrt_path.c_str());
 		args.push_back(geotiff_path.c_str());
 		AeroLib::RunProgramEnv(tree.prog_gdal_translate, args);
@@ -332,7 +332,7 @@ void DEM::create_dem(XString input_point_cloud, XString dem_type, std::vector<do
 		args.push_back("BIGTIFF=IF_SAFER");
 		args.push_back("--config");
 		args.push_back("GDAL_CACHEMAX");
-		args.push_back("32.0%");				//TODO: get_max_memory()
+		args.push_back(XString::Format("%0.1f%%", AeroLib::get_max_memory_percent()).c_str());
 		args.push_back(tiles_vrt_path.c_str());
 		args.push_back(geotiff_path.c_str());
 		AeroLib::RunProgramEnv(tree.prog_gdal_translate, args);
