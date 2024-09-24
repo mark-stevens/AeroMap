@@ -280,6 +280,22 @@ void Project::Clear()
 	ms_FileName.Clear();
 	ms_ProjectName.Clear();
 
+	ms_DroneInputPath.Clear();
+	ms_DroneOutputPath.Clear();
+
+	ms_gcp_geo_ref.Clear();
+
+	m_MaxDim = 0;
+	m_MaxDims.cx = 0;
+	m_MaxDims.cy = 0;
+	m_undistorted_image_max_size = 0;
+	m_ErrorCtr = 0;
+
+	arg.gcp.Clear();
+	tree.dem_dtm.Clear();
+	tree.dem_dsm.Clear();
+	tree.odm_orthophoto_tif.Clear();
+
 	mb_IsDirty = false;
 
 	emit projectChanged_sig();
@@ -459,8 +475,9 @@ void Project::FreeResources()
 
 	m_GcpList.clear();
 
-	// free lidar resources
+	m_ImageList.clear();
 
+	// free lidar resources
 	for (auto lidar : m_LidarFiles)
 	{
 		if (lidar.pFile)
@@ -470,8 +487,6 @@ void Project::FreeResources()
 		}
 	}
 	m_LidarFiles.clear();
-
-	m_ImageList.clear();
 }
 
 int Project::GetGcpCount()
