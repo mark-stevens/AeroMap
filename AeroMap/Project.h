@@ -190,6 +190,7 @@ public:
 	int LoadImageList();
 	int GetImageCount();
 	const std::vector<ImageType>& GetImageList();
+	bool VerifyGpsExif();
 
 	XString GetFileName();
 	XString GetName();

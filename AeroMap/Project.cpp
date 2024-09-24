@@ -388,6 +388,28 @@ const std::vector<Project::ImageType>& Project::GetImageList()
 	return m_ImageList;
 }
 
+bool Project::VerifyGpsExif()
+{
+	// Ensure images contain exif gps data.
+	//
+
+	bool valid = true;
+	for (ImageType image : m_ImageList)
+	{
+		// easy exif can't query for existence, so we rely on lla being all zeros
+		if ((image.exif.GeoLocation.Latitude == 0.0) && (image.exif.GeoLocation.Longitude == 0))
+		{
+			if (image.exif.GeoLocation.Altitude == 0.0)
+			{
+				valid = false;
+				break;
+			}
+		}
+	}
+
+	return valid;
+}
+
 int Project::GetMaxDim()
 {
 	return m_MaxDim;

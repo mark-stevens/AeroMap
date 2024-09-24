@@ -52,6 +52,12 @@ int DroneProc::Run(Stage::Id initStage)
 		return status;
 	}
 
+	if (GetProject().VerifyGpsExif() == false)
+	{
+		GetApp()->LogWrite("Images do not contain GPS information.");
+		return status;
+	}
+
 	AeroLib::InitRunLog();
 	PreprocessParameters();
 
