@@ -266,6 +266,7 @@
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="OdmOrthoPhoto.cpp" />
     <ClCompile Include="OrthoWindow.cpp" />
+    <ClCompile Include="Photo.cpp" />
     <ClCompile Include="PointCloud.cpp" />
     <ClCompile Include="ProfileWindow.cpp" />
     <ClCompile Include="Project.cpp" />
@@ -530,6 +531,7 @@
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
     </CustomBuild>
     <ClInclude Include="OdmOrthoPhoto.h" />
+    <ClInclude Include="Photo.h" />
     <ClInclude Include="PointCloud.h" />
     <ClInclude Include="RasterFile.h" />
     <CustomBuild Include="ContourDlg.h">
