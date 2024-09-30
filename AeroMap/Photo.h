@@ -13,8 +13,32 @@ public:
 	bool is_thermal();
 	bool is_rgb();
 
+	bool has_geo();
+	bool has_ypr();
+	bool has_speed();
+
 	XString GetMake();
 	XString GetModel();
+	
+	int GetWidth();
+	int GetHeight();
+
+	double GetLatitude();
+	double GetLongitude();
+	double GetAltitude();
+
+	double GetExposureTime();
+	int GetIsoSpeed();
+	int GetBitsPerSample();
+
+	XString GetDateTime();
+	__int64 GetEpoch();
+
+	double GetFocalRatio();
+	double GetFocalLength();
+
+	XString GetCameraStrOSFM();
+	XString GetCameraStrODM();
 
 	static SizeType find_largest_photo_dims(const std::vector<Project::ImageType>& photos);
 	static int find_largest_photo_dim(const std::vector<Project::ImageType>& photos);
@@ -39,8 +63,9 @@ private:
 	double m_gps_lon;
 	double m_gps_alt;
 
+	double m_focal_length;
 	double m_focal_ratio;
-	XString m_utc_time;			// capture time, "%Y:%m:%d %H:%M:%S" format
+	XString m_date_time;			// capture time, "%Y:%m:%d %H:%M:%S" format
 	__int64 m_epoch;			// capture time, unix epoch
 
 	// Multi-band fields
@@ -100,10 +125,24 @@ private:
 	double m_phi;
 	double m_kappa;
 
+	bool m_has_geo;
+	bool m_has_ypr;
+	bool m_has_speed;
+
+	XString m_camera_str_osfm;		// camera id, opensfm format
+	XString m_camera_str_odm;		// open drone map format
+
 private:
 
 	int parse_exif_values(XString file_name);
 	void compute_opk();
+
+	int yisleap(int year);
+	int get_yday(int mon, int day, int year);
+	__int64 CalcUnixEpoch(XString dateTime);
+
+	double CalcFocalRatio(easyexif::EXIFInfo exif);
+	XString GetCameraString(easyexif::EXIFInfo exif, bool opensfm);
 };
 
 #endif // #ifndef PHOTO_H

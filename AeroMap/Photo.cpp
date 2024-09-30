@@ -41,6 +41,7 @@ Photo::Photo(XString file_name)
     , m_orientation(1)
     , m_gps_lat(0.0), m_gps_lon(0.0), m_gps_alt(0.0)
     , m_focal_ratio(0.0)
+    , m_focal_length(0.0)
     , m_band_name("RGB")
     , m_band_index(0)
     , m_fnumber(0.0)
@@ -49,6 +50,7 @@ Photo::Photo(XString file_name)
     , m_epoch(0)
     , m_yaw(0.0), m_pitch(0.0), m_roll(0.0)
     , m_omega(0.0), m_phi(0.0), m_kappa(0.0)
+    , m_has_geo(false), m_has_ypr(false), m_has_speed(false)
 {
 	// self.mask = None
 
@@ -92,6 +94,17 @@ int Photo::parse_exif_values(XString file_name)
                 << "Image Resolution " << imageEXIF.ImageWidth << "x" << imageEXIF.ImageHeight << " pixels\n"
                 << "Camera Model " << imageEXIF.Make << " - " << imageEXIF.Model << "\n"
                 << "Focal Length " << imageEXIF.FocalLength << " mm" << std::endl;
+
+            m_has_geo = imageEXIF.GeoLocation.hasLatLon();
+            m_has_ypr = imageEXIF.GeoLocation.hasOrientation();
+            m_has_speed = imageEXIF.GeoLocation.hasSpeed();
+
+            //int status = imageEXIF.parseFromXMPSegment(buf, len);
+
+            // how to read band info?
+            ////            band_name = self.get_xmp_tag(xtags, ['Camera:BandName', '@Camera:BandName', 'FLIR:BandName'])
+
+            //??? imageEXIF.parseFromXMPSegment()
         }
 
         // Read the JPEG file into a buffer
@@ -125,26 +138,11 @@ int Photo::parse_exif_values(XString file_name)
 
         // pre-computed values
 
-        //m_focal_ratio = AeroLib::CalcFocalRatio(exif);      //TODO: move here from AeroLib
-        m_utc_time = exif.DateTime.c_str();
-        //entry.epoch = AeroLib::CalcUnixEpoch(entry.exif.DateTime.c_str());
-        //entry.camera_str_osfm = AeroLib::GetCameraString(entry.exif, true);
-        //entry.camera_str_odm = AeroLib::GetCameraString(entry.exif, false);
-
-        //// record max sizes
-
-        //if (m_MaxDim < (int)entry.exif.ImageWidth)
-        //    m_MaxDim = (int)entry.exif.ImageWidth;
-        //if (m_MaxDim < (int)entry.exif.ImageHeight)
-        //    m_MaxDim = (int)entry.exif.ImageHeight;
-
-        //int mp = entry.exif.ImageWidth * entry.exif.ImageHeight;
-        //if (mp > max_mp)
-        //{
-        //    max_mp = mp;
-        //    m_MaxDims.cx = entry.exif.ImageWidth;
-        //    m_MaxDims.cy = entry.exif.ImageHeight;
-        //}
+        m_focal_ratio = CalcFocalRatio(exif);      //TODO: move here from AeroLib
+        m_date_time = exif.DateTime.c_str();
+        m_epoch = CalcUnixEpoch(m_date_time);
+        m_camera_str_osfm = GetCameraString(exif, true);
+        m_camera_str_odm = GetCameraString(exif, false);
 
     //with open(_path_file, 'rb') as f:
     //    tags = exifread.process_file(f, details=True, extract_thumbnail=False)
@@ -178,8 +176,8 @@ int Photo::parse_exif_values(XString file_name)
         // self.spectral_irradiance = None
         // self.horizontal_irradiance = None
         // self.irradiance_scale_to_si = None
-        m_utc_time = exif.DateTime.c_str();
-        //m_epoch = AeroLib::CalcUnixEpoch(m_utc_time.c_str());
+
+        m_focal_length = exif.FocalLength;
 
     //    try:
     //        if 'Image Tag 0xC61A' in tags:
@@ -390,6 +388,27 @@ int Photo::parse_exif_values(XString file_name)
     return 0;
 }
 
+XString Photo::GetCameraString(easyexif::EXIFInfo exif, bool opensfm)
+{
+    // Return camera id string.
+    //
+
+    double focal_ratio = CalcFocalRatio(exif);
+
+    XString camera_str = XString::Format("%s %s %d %d brown %0.4f",
+        exif.Make.c_str(), exif.Model.c_str(),
+        exif.ImageWidth, exif.ImageHeight,
+        focal_ratio);
+
+    // opensfm and odm have slightly different formats
+    if (opensfm)
+        camera_str.Insert(0, "v2 ");
+
+    camera_str.MakeLower();
+
+    return camera_str;
+}
+
 SizeType Photo::find_largest_photo_dims(const std::vector<Project::ImageType>& photos)
 {
 	SizeType max_dims;
@@ -509,57 +528,7 @@ double Photo::get_mm_per_unit(int resolution_unit)
 //            self.dls_roll = geo_entry.roll
 //        self.gps_xy_stddev = geo_entry.horizontal_accuracy
 //        self.gps_z_stddev = geo_entry.vertical_accuracy
-//
-//    def compute_focal(self, tags, xtags):
-//        try:
-//            self.focal_ratio = self.extract_focal(self.camera_make, self.camera_model, tags, xtags)
-//        except (IndexError, ValueError) as e:
-//            log.ODM_WARNING("Cannot extract focal ratio for %s: %s" % (self.filename, str(e)))
-//
-//    def extract_focal(self, make, model, tags, xtags):
-//        if make != "unknown":
-//            # remove duplicate 'make' information in 'model'
-//            model = model.replace(make, "")
-//
-//        sensor_string = (make.strip() + " " + model.strip()).strip().lower()
-//
-//        sensor_width = None
-//        if ("EXIF FocalPlaneResolutionUnit" in tags and "EXIF FocalPlaneXResolution" in tags):
-//            resolution_unit = self.float_value(tags["EXIF FocalPlaneResolutionUnit"])
-//            mm_per_unit = get_mm_per_unit(resolution_unit)
-//            if mm_per_unit:
-//                pixels_per_unit = self.float_value(tags["EXIF FocalPlaneXResolution"])
-//                if pixels_per_unit <= 0 and "EXIF FocalPlaneYResolution" in tags:
-//                    pixels_per_unit = self.float_value(tags["EXIF FocalPlaneYResolution"])
-//
-//                if pixels_per_unit > 0 and self.width is not None:
-//                    units_per_pixel = 1 / pixels_per_unit
-//                    sensor_width = self.width * units_per_pixel * mm_per_unit
-//
-//        focal_35 = None
-//        focal = None
-//        if "EXIF FocalLengthIn35mmFilm" in tags:
-//            focal_35 = self.float_value(tags["EXIF FocalLengthIn35mmFilm"])
-//        if "EXIF FocalLength" in tags:
-//            focal = self.float_value(tags["EXIF FocalLength"])
-//        if focal is None and "@aux:Lens" in xtags:
-//            lens = self.get_xmp_tag(xtags, ["@aux:Lens"])
-//            matches = re.search('([\d\.]+)mm', str(lens))
-//            if matches:
-//                focal = float(matches.group(1))
-//
-//        if focal_35 is not None and focal_35 > 0:
-//            focal_ratio = focal_35 / 36.0  # 35mm film produces 36x24mm pictures.
-//        else:
-//            if not sensor_width:
-//                sensor_width = sensor_data().get(sensor_string, None)
-//            if sensor_width and focal:
-//                focal_ratio = focal / sensor_width
-//            else:
-//                focal_ratio = 0.85
-//
-//        return focal_ratio
-//
+
 //    def set_attr_from_xmp_tag(self, attr, xmp_tags, tags, cast=None):
 //        v = self.get_xmp_tag(xmp_tags, tags)
 //        if v is not None:
@@ -570,7 +539,7 @@ double Photo::get_mm_per_unit(int resolution_unit)
 //                if (cast == float or cast == int) and "/" in v:
 //                    v = self.try_parse_fraction(v)
 //                setattr(self, attr, cast(v))
-//
+
 //    def get_xmp_tag(self, xmp_tags, tags):
 //        if isinstance(tags, str):
 //            tags = [tags]
@@ -589,8 +558,7 @@ double Photo::get_mm_per_unit(int resolution_unit)
 //                        return " ".join(items)
 //                elif isinstance(t, int) or isinstance(t, float):
 //                    return t
-//
-//
+
 //    # From https://github.com/mapillary/OpenSfM/blob/master/opensfm/exif.py
 //    def get_xmp(self, file):
 //        img_bytes = file.read()
@@ -615,18 +583,7 @@ double Photo::get_mm_per_unit(int resolution_unit)
 //                return [xdict]
 //        else:
 //            return []
-//
-//    def dms_to_decimal(self, dms, sign):
-//        """Converts dms coords to decimal degrees"""
-//        degrees, minutes, seconds = self.float_values(dms)
-//
-//        if degrees is not None and minutes is not None and seconds is not None:
-//            return (-1 if sign.values[0] in 'SWsw' else 1) * (
-//                degrees +
-//                minutes / 60 +
-//                seconds / 3600
-//            )
-//
+
 //    def float_values(self, tag):
 //        if isinstance(tag.values, list):
 //            result = []
@@ -644,12 +601,12 @@ double Photo::get_mm_per_unit(int resolution_unit)
 //            return [float(tag.values.num) / float(tag.values.den) if tag.values.den != 0 else None]
 //        else:
 //            return [None]
-//
+
 //    def float_value(self, tag):
 //        v = self.float_values(tag)
 //        if len(v) > 0:
 //            return v[0]
-//
+
 //    def int_values(self, tag):
 //        if isinstance(tag.values, list):
 //            return [int(v) for v in tag.values]
@@ -657,15 +614,15 @@ double Photo::get_mm_per_unit(int resolution_unit)
 //            return []
 //        else:
 //            return [int(tag.values)]
-//
+
 //    def int_value(self, tag):
 //        v = self.int_values(tag)
 //        if len(v) > 0:
 //            return v[0]
-//
+
 //    def list_values(self, tag):
 //        return " ".join(map(str, tag.values))
-//
+
 //    def try_parse_fraction(self, val):
 //        parts = val.split("/")
 //        if len(parts) == 2:
@@ -790,24 +747,6 @@ double Photo::get_mm_per_unit(int resolution_unit)
 //        if camera_projection in projections:
 //            self.camera_projection = camera_projection
 //
-bool Photo::is_thermal()
-{
-    // Added for support M2EA camera sensor
-    if ((m_camera_make == "DJI") && (m_camera_model == "MAVIC2-ENTERPRISE-ADVANCED") && (m_width == 640 && m_height == 512))
-        return true;
-    // Added for support DJI H20T camera sensor
-    if ((m_camera_make == "DJI") && (m_camera_model == "ZH20T") && (m_width == 640 && m_height == 512))
-        return true;
-    //return self.band_name.upper() in ["LWIR"] # TODO: more?
-    return false;
-}
-
-bool Photo::is_rgb()
-{
-    //        return self.band_name.upper() in ["RGB", "REDGREENBLUE"]
-    return true;
-}
-
 //    def camera_id(self):
 //        return " ".join(
 //                [
@@ -895,58 +834,58 @@ void Photo::compute_opk()
     // OPK = Omega/Phi/Kappa angles 
     //       orientation of sensor (vs yaw/pitch/roll, orientation of aircraft)
 
-    //if (has_ypr() && self.has_geo())
+    if (has_ypr() && has_geo())
     {
-        //            y, p, r = math.radians(self.yaw), math.radians(self.pitch), math.radians(self.roll)
+        //y, p, r = math.radians(self.yaw), math.radians(self.pitch), math.radians(self.roll)
     
-    //            # Ref: New Calibration and Computing Method for Direct
-    //            # Georeferencing of Image and Scanner Data Using the
-    //            # Position and Angular Data of an Hybrid Inertial Navigation System
-    //            # by Manfred Bäumker
-    //
-    //            # YPR rotation matrix
-    //            cnb = np.array([[ math.cos(y) * math.cos(p), math.cos(y) * math.sin(p) * math.sin(r) - math.sin(y) * math.cos(r), math.cos(y) * math.sin(p) * math.cos(r) + math.sin(y) * math.sin(r)],
-    //                            [ math.sin(y) * math.cos(p), math.sin(y) * math.sin(p) * math.sin(r) + math.cos(y) * math.cos(r), math.sin(y) * math.sin(p) * math.cos(r) - math.cos(y) * math.sin(r)],
-    //                            [ -math.sin(p), math.cos(p) * math.sin(r), math.cos(p) * math.cos(r)],
-    //                           ])
-    //
-    //            # Convert between image and body coordinates
-    //            # Top of image pixels point to flying direction
-    //            # and camera is looking down.
-    //            # We might need to change this if we want different
-    //            # camera mount orientations (e.g. backward or sideways)
-    //
-    //            # (Swap X/Y, flip Z)
-    //            cbb = np.array([[0, 1, 0],
-    //                            [1, 0, 0],
-    //                            [0, 0, -1]])
-    //
-    //            delta = 1e-7
-    //
-    //            alt = self.altitude if self.altitude is not None else 0.0
-    //            p1 = np.array(ecef_from_lla(self.latitude + delta, self.longitude, alt))
-    //            p2 = np.array(ecef_from_lla(self.latitude - delta, self.longitude, alt))
-    //            xnp = p1 - p2
-    //            m = np.linalg.norm(xnp)
-    //
-    //            if m == 0:
-    //                log.ODM_WARNING("Cannot compute OPK angles, divider = 0")
-    //                return
-    //
-    //            # Unit vector pointing north
-    //            xnp /= m
-    //
-    //            znp = np.array([0, 0, -1]).T
-    //            ynp = np.cross(znp, xnp)
-    //
-    //            cen = np.array([xnp, ynp, znp]).T
-    //
-    //            # OPK rotation matrix
-    //            ceb = cen.dot(cnb).dot(cbb)
-    //
-    //            self.omega = math.degrees(math.atan2(-ceb[1][2], ceb[2][2]))
-    //            self.phi = math.degrees(math.asin(ceb[0][2]))
-    //            self.kappa = math.degrees(math.atan2(-ceb[0][1], ceb[0][0]))
+        //# Ref: New Calibration and Computing Method for Direct
+        //# Georeferencing of Image and Scanner Data Using the
+        //# Position and Angular Data of an Hybrid Inertial Navigation System
+        //# by Manfred Bäumker
+
+        //# YPR rotation matrix
+        //cnb = np.array([[ math.cos(y) * math.cos(p), math.cos(y) * math.sin(p) * math.sin(r) - math.sin(y) * math.cos(r), math.cos(y) * math.sin(p) * math.cos(r) + math.sin(y) * math.sin(r)],
+        //                [ math.sin(y) * math.cos(p), math.sin(y) * math.sin(p) * math.sin(r) + math.cos(y) * math.cos(r), math.sin(y) * math.sin(p) * math.cos(r) - math.cos(y) * math.sin(r)],
+        //                [ -math.sin(p), math.cos(p) * math.sin(r), math.cos(p) * math.cos(r)],
+        //                ])
+
+        //# Convert between image and body coordinates
+        //# Top of image pixels point to flying direction
+        //# and camera is looking down.
+        //# We might need to change this if we want different
+        //# camera mount orientations (e.g. backward or sideways)
+
+        //# (Swap X/Y, flip Z)
+        //cbb = np.array([[0, 1, 0],
+        //                [1, 0, 0],
+        //                [0, 0, -1]])
+
+        //delta = 1e-7
+
+        //alt = self.altitude if self.altitude is not None else 0.0
+        //p1 = np.array(ecef_from_lla(self.latitude + delta, self.longitude, alt))
+        //p2 = np.array(ecef_from_lla(self.latitude - delta, self.longitude, alt))
+        //xnp = p1 - p2
+        //m = np.linalg.norm(xnp)
+
+        //if m == 0:
+        //    log.ODM_WARNING("Cannot compute OPK angles, divider = 0")
+        //    return
+
+        //# Unit vector pointing north
+        //xnp /= m
+
+        //znp = np.array([0, 0, -1]).T
+        //ynp = np.cross(znp, xnp)
+
+        //cen = np.array([xnp, ynp, znp]).T
+
+        //# OPK rotation matrix
+        //ceb = cen.dot(cnb).dot(cbb)
+
+        //self.omega = math.degrees(math.atan2(-ceb[1][2], ceb[2][2]))
+        //self.phi = math.degrees(math.asin(ceb[0][2]))
+        //self.kappa = math.degrees(math.atan2(-ceb[0][1], ceb[0][0]))
     }
 }
 
@@ -962,6 +901,122 @@ void Photo::compute_opk()
 //        else:
 //            return 0.0
 
+double Photo::CalcFocalRatio(easyexif::EXIFInfo exif)
+{
+    double focal_ratio = 0.0;
+
+    double sensor_width = 0.0;
+    if (exif.LensInfo.FocalPlaneResolutionUnit > 0 && exif.LensInfo.FocalPlaneXResolution > 0.0)
+    {
+        int resolution_unit = exif.LensInfo.FocalPlaneResolutionUnit;
+        double mm_per_unit = 0.0;
+        if (resolution_unit == 2)		// inch
+            mm_per_unit = 25.4;
+        else if (resolution_unit == 3)		// cm
+            mm_per_unit = 10;
+        else if (resolution_unit == 4)		// mm
+            mm_per_unit = 1;
+        else if (resolution_unit == 5)		// um
+            mm_per_unit = 0.001;
+        else
+        {
+            Logger::Write(__FUNCTION__, "Unknown EXIF resolution unit: %d", resolution_unit);
+            assert(false);
+            return focal_ratio;
+        }
+
+        if (mm_per_unit > 0.0)
+        {
+            double pixels_per_unit = exif.LensInfo.FocalPlaneXResolution;
+            if (pixels_per_unit <= 0.0 && exif.LensInfo.FocalPlaneYResolution > 0.0)
+                pixels_per_unit = exif.LensInfo.FocalPlaneYResolution;
+
+            if ((pixels_per_unit > 0.0) && (exif.ImageWidth > 0))
+            {
+                double units_per_pixel = 1.0 / pixels_per_unit;
+                sensor_width = (double)exif.ImageWidth * units_per_pixel * mm_per_unit;
+            }
+        }
+    }
+
+    //focal_35 = None
+    double focal;
+    //if "EXIF FocalLengthIn35mmFilm" in tags:
+    //	focal_35 = self.float_value(tags["EXIF FocalLengthIn35mmFilm"])
+    if (exif.FocalLength > 0.0)
+        focal = exif.FocalLength;
+    //if focal is None and "@aux:Lens" in xtags:
+    //	lens = self.get_xmp_tag(xtags, ["@aux:Lens"])
+    //	matches = re.search('([\d\.]+)mm', str(lens))
+    //	if matches:
+    //		focal = float(matches.group(1))
+
+    //if focal_35 is not None and focal_35 > 0:
+    //	focal_ratio = focal_35 / 36.0  # 35mm film produces 36x24mm pictures.
+    //else:
+    //	if not sensor_width:
+    //		sensor_width = sensor_data().get(sensor_string, None)
+    if ((sensor_width > 0.0) && (focal > 0.0))
+        focal_ratio = focal / sensor_width;
+    else
+        focal_ratio = 0.85;
+
+    return focal_ratio;
+}
+
+int Photo::yisleap(int year)
+{
+    return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+}
+
+int Photo::get_yday(int mon, int day, int year)
+{
+    static const int days[2][13] = {
+        {0, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334},
+        {0, 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335}
+    };
+    int leap = yisleap(year);
+
+    return days[leap][mon] + day;
+}
+
+__int64 Photo::CalcUnixEpoch(XString dateTime)
+{
+    // Return seconds since Jan 1, 1950.
+    //
+    // Inputs:
+    //		dateTime = "YYYY:MM:SS hh:mm:ss"
+    // Outputs:
+    //		return = seconds since Jan 1, 1970
+    //
+
+    int epoch = 0;
+
+    XString str = dateTime;
+    if (str.GetLength() == 19)
+    {
+        __int64 tm_year = str.Mid(0, 4).GetLong();
+        __int64 tm_month = str.Mid(5, 2).GetLong();
+        __int64 tm_day = str.Mid(8, 2).GetLong();
+        __int64 tm_hour = str.Mid(11, 2).GetLong();
+        __int64 tm_min = str.Mid(14, 2).GetLong();
+        __int64 tm_sec = str.Mid(17, 2).GetLong();
+
+        __int64 tm_yday = get_yday(tm_month, tm_day, tm_year);
+
+        // yday is 1-based
+        --tm_yday;
+
+        tm_year -= 1900;
+
+        epoch = tm_sec + tm_min * 60 + tm_hour * 3600 + tm_yday * 86400 +
+            (tm_year - 70) * 31536000 + ((tm_year - 69) / 4) * 86400 -
+            ((tm_year - 1) / 100) * 86400 + ((tm_year + 299) / 400) * 86400;
+    }
+
+    return epoch;
+}
+
 XString Photo::GetMake()
 {
     return m_camera_make;
@@ -970,4 +1025,107 @@ XString Photo::GetMake()
 XString Photo::GetModel()
 {
     return m_camera_model;
+}
+
+int Photo::GetWidth()
+{
+    return m_width;
+}
+
+int Photo::GetHeight()
+{
+    return m_height;
+}
+
+double Photo::GetLatitude()
+{
+    return m_gps_lat;
+}
+
+double Photo::GetLongitude()
+{
+    return m_gps_lon;
+}
+
+double Photo::GetAltitude()
+{
+    return m_gps_alt;
+}
+
+double Photo::GetExposureTime()
+{
+    return m_exposure_time;
+}
+
+int Photo::GetIsoSpeed()
+{
+    return m_iso_speed;
+}
+
+int Photo::GetBitsPerSample()
+{
+    return m_bits_per_sample;
+}
+
+XString Photo::GetDateTime()
+{
+    return m_date_time;
+}
+
+__int64 Photo::GetEpoch()
+{
+    return m_epoch;
+}
+
+double Photo::GetFocalRatio()
+{
+    return m_focal_ratio;
+}
+
+double Photo::GetFocalLength()
+{
+    return m_focal_length;
+}
+
+bool Photo::is_thermal()
+{
+    // Added for support M2EA camera sensor
+    if ((m_camera_make == "DJI") && (m_camera_model == "MAVIC2-ENTERPRISE-ADVANCED") && (m_width == 640 && m_height == 512))
+        return true;
+    // Added for support DJI H20T camera sensor
+    if ((m_camera_make == "DJI") && (m_camera_model == "ZH20T") && (m_width == 640 && m_height == 512))
+        return true;
+    //return self.band_name.upper() in ["LWIR"] # TODO: more?
+    return false;
+}
+
+bool Photo::is_rgb()
+{
+    //        return self.band_name.upper() in ["RGB", "REDGREENBLUE"]
+    return true;
+}
+
+bool Photo::has_geo()
+{
+    return m_has_geo;
+}
+
+bool Photo::has_ypr()
+{
+    return m_has_ypr;
+}
+
+bool Photo::has_speed()
+{
+    return m_has_speed;
+}
+
+XString Photo::GetCameraStrOSFM()
+{
+    return m_camera_str_osfm;
+}
+
+XString Photo::GetCameraStrODM()
+{
+    return m_camera_str_odm;
 }
