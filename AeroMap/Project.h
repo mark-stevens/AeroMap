@@ -1,9 +1,9 @@
 #ifndef PROJECT_H
 #define PROJECT_H
 
-#include "exif.h"			// easy exif header
 #include "Gis.h"
 #include "XString.h"
+#include "Photo.h"
 
 #include "gdal_priv.h"
 #include "cpl_conv.h"		// for CPLMalloc()
@@ -124,24 +124,6 @@ class Project : public QObject
 
 public:
 
-	struct ImageType
-	{
-		XString file_name;
-		easyexif::EXIFInfo exif;
-
-		// pre-computed values
-		double focal_ratio;
-		__int64 epoch;					// capture time, unix epoch
-		XString camera_str_osfm;		// camera id string, opensfm format
-		XString camera_str_odm;			// camera id string, odm format
-
-		ImageType()
-			: focal_ratio(0.0)
-			, epoch(0)
-		{
-		}
-	};
-
 	struct GcpType
 	{
 		double geo_x;
@@ -189,7 +171,7 @@ public:
 
 	int LoadImageList();
 	int GetImageCount();
-	const std::vector<ImageType>& GetImageList();
+	const std::vector<Photo>& GetImageList();
 	bool VerifyGpsExif();
 
 	XString GetFileName();
@@ -227,24 +209,24 @@ signals:
 
 private:
 
-	std::vector<ImageType> m_ImageList;		// drone photogrammetry input images
+	std::vector<Photo> m_ImageList;			// drone photogrammetry input images
 	std::vector<GcpType> m_GcpList;			// ground control points
 	XString ms_gcp_geo_ref;					// georef string for gcps 
 	std::vector<LidarType> m_LidarFiles;	// lidar files
 	
-	XString ms_FileName;		// project path/file name
-	XString ms_ProjectName;		// project name
+	XString ms_FileName;			// project path/file name
+	XString ms_ProjectName;			// project name
 
-	XString ms_DroneInputPath;	// location of drone photogrammetry inputs
-	XString ms_DroneOutputPath;	// root folder that will receive outputs
+	XString ms_DroneInputPath;		// location of drone photogrammetry inputs
+	XString ms_DroneOutputPath;		// root folder that will receive outputs
 
-	int m_MaxDim;			// single largest image dimension
-	SizeType m_MaxDims;		// dimensions of largest image (max width x height)
+	int m_MaxDim;					// single largest image dimension
+	SizeType m_MaxDims;				// dimensions of largest image (max width x height)
 	
 	int m_undistorted_image_max_size;
 
-	int m_ErrorCtr;				// # of errors in project file
-	bool mb_IsDirty;			// unsaved changes
+	int m_ErrorCtr;					// # of errors in project file
+	bool mb_IsDirty;				// unsaved changes
 
 private:
 

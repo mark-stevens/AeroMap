@@ -234,9 +234,6 @@
     <ClCompile Include="..\Common\DateTime.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\exif.cpp">
-      <Filter>Common</Filter>
-    </ClCompile>
     <ClCompile Include="..\Common\GLManager.cpp">
       <Filter>Common</Filter>
     </ClCompile>
@@ -631,9 +628,6 @@
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="..\Common\DateTime.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Common\exif.h">
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="..\Common\GLManager.h">

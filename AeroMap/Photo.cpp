@@ -6,9 +6,7 @@
 #include <fstream>  // std::ifstream
 #include <algorithm>
 
-#include "exif.h"       // easy exif header
 #include "Logger.h"
-#include "TinyEXIF.h"
 #include "Photo.h"
 
 //import logging
@@ -75,124 +73,83 @@ int Photo::parse_exif_values(XString file_name)
 	if ((file_name.EndsWithNoCase(".jpg") == false) && (file_name.EndsWithNoCase(".jpeg") == false))
 		return -1;
 
-	//tags = {}
-	//xtags = {}
-
 //TODO:
 // i think i like the idea of move values "up" to class level like odm,
 // rather than constantly accessing "image.exif." - also decouples image
 // properties from any particular exif lib
 
-//TODO:
-//parsing twice - eventually plan to drop easy exif
-
 	// open a stream to read just the necessary parts of the image file
 	std::ifstream istream(file_name.c_str(), std::ifstream::binary);
 
 	// parse image EXIF and XMP metadata
-	TinyEXIF::EXIFInfo imageEXIF(istream);
-	if (imageEXIF.Fields)
+	int status = m_imageEXIF.parseFrom(istream);
+	if (m_imageEXIF.Fields)
 	{
 		std::cout
-			<< "Image Description " << imageEXIF.ImageDescription << "\n"
-			<< "Image Resolution " << imageEXIF.ImageWidth << "x" << imageEXIF.ImageHeight << " pixels\n"
-			<< "Camera Model " << imageEXIF.Make << " - " << imageEXIF.Model << "\n"
-			<< "Focal Length " << imageEXIF.FocalLength << " mm" << std::endl;
+			<< "Image Description " << m_imageEXIF.ImageDescription << "\n"
+			<< "Image Resolution " << m_imageEXIF.ImageWidth << "x" << m_imageEXIF.ImageHeight << " pixels\n"
+			<< "Camera Model " << m_imageEXIF.Make << " - " << m_imageEXIF.Model << "\n"
+			<< "Focal Length " << m_imageEXIF.FocalLength << " mm" << std::endl;
 
-		if (imageEXIF.BandName.length() > 0)
-			m_band_name = imageEXIF.BandName.c_str();
+		m_camera_make = m_imageEXIF.Make.c_str();
+		m_camera_model = m_imageEXIF.Model.c_str();
+
+		m_orientation = m_imageEXIF.Orientation;
+
+		m_exif_width = m_width;
+		m_exif_height = m_height;
+
+		m_date_time = m_imageEXIF.DateTime.c_str();
+		m_epoch = CalcUnixEpoch(m_date_time);
+
+		// Capture info
+		m_exposure_time = m_imageEXIF.ExposureTime;
+		m_iso_speed = m_imageEXIF.ISOSpeedRatings;
+		m_bits_per_sample = m_imageEXIF.BitsPerSample;
+		m_fnumber = m_imageEXIF.FNumber;
+		// self.vignetting_center = None
+		// self.vignetting_polynomial = None
+		// self.spectral_irradiance = None
+		// self.horizontal_irradiance = None
+		// self.irradiance_scale_to_si = None
+
+		m_focal_length = m_imageEXIF.FocalLength;
+
+		m_focal_ratio = CalcFocalRatio();      //TODO: move here from AeroLib
+
+		m_camera_str_osfm = GetCameraString(true);
+		m_camera_str_odm = GetCameraString(false);
+
+		if (m_imageEXIF.BandName.length() > 0)
+			m_band_name = m_imageEXIF.BandName.c_str();
 		//TODO:
 		//not sure how index works
 		m_band_index = 0;
 
-		m_has_geo = imageEXIF.GeoLocation.hasLatLon();
+		m_has_geo = m_imageEXIF.GeoLocation.hasLatLon();
 		if (m_has_geo)
 		{
-			m_gps_lat = imageEXIF.GeoLocation.Latitude;
-			m_gps_lon = imageEXIF.GeoLocation.Longitude;
-			m_gps_alt = imageEXIF.GeoLocation.Altitude;
+			m_gps_lat = m_imageEXIF.GeoLocation.Latitude;
+			m_gps_lon = m_imageEXIF.GeoLocation.Longitude;
+			m_gps_alt = m_imageEXIF.GeoLocation.Altitude;
 		}
 
-		m_has_ypr = imageEXIF.GeoLocation.hasOrientation();
+		m_has_ypr = m_imageEXIF.GeoLocation.hasOrientation();
 		if (m_has_ypr)
 		{
-			m_yaw_deg = imageEXIF.GeoLocation.YawDegree;
-			m_pitch_deg = imageEXIF.GeoLocation.PitchDegree;
-			m_roll_deg = imageEXIF.GeoLocation.RollDegree;
+			m_yaw_deg = m_imageEXIF.GeoLocation.YawDegree;
+			m_pitch_deg = m_imageEXIF.GeoLocation.PitchDegree;
+			m_roll_deg = m_imageEXIF.GeoLocation.RollDegree;
 		}
 
-		m_has_speed = imageEXIF.GeoLocation.hasSpeed();
+		m_has_speed = m_imageEXIF.GeoLocation.hasSpeed();
 		if (m_has_speed)
 		{
-			m_speedx = imageEXIF.GeoLocation.SpeedX;
-			m_speedy = imageEXIF.GeoLocation.SpeedY;
-			m_speedz = imageEXIF.GeoLocation.SpeedZ;
+			m_speedx = m_imageEXIF.GeoLocation.SpeedX;
+			m_speedy = m_imageEXIF.GeoLocation.SpeedY;
+			m_speedz = m_imageEXIF.GeoLocation.SpeedZ;
 		}
 	}
-
-	// Read the JPEG file into a buffer
-	FILE* fp = fopen(file_name.c_str(), "rb");
-	if (!fp)
-	{
-		Logger::Write(__FUNCTION__, "Unable to open image file: '%s'", file_name.c_str());
-		return -1;
-	}
-	fseek(fp, 0, SEEK_END);
-	unsigned long fsize = ftell(fp);
-	rewind(fp);
-	unsigned char* buf = new unsigned char[fsize];
-	if (fread(buf, 1, fsize, fp) != fsize)
-	{
-		Logger::Write(__FUNCTION__, "Unable to open read file: '%s'", file_name.c_str());
-		delete[] buf;
-		return -1;
-	}
-	fclose(fp);
-
-	// Parse EXIF
-	easyexif::EXIFInfo exif;
-	int code = exif.parseFrom(buf, fsize);
-	delete[] buf;
-	if (code)
-	{
-		Logger::Write(__FUNCTION__, "Error parsing EXIF: '%s' (code %d)", file_name.c_str(), code);
-		return -1;
-	}
-
-	m_focal_ratio = CalcFocalRatio(exif);      //TODO: move here from AeroLib
-	m_date_time = exif.DateTime.c_str();
-	m_epoch = CalcUnixEpoch(m_date_time);
-
-	//with open(_path_file, 'rb') as f:
-	//    tags = exifread.process_file(f, details=True, extract_thumbnail=False)
-	//    try:
-
-	if (m_width == 0)
-		m_width = exif.ImageWidth;
-	if (m_height == 0)
-		m_height = exif.ImageHeight;
-	m_orientation = exif.Orientation;
-
-	m_exif_width = m_width;
-	m_exif_height = m_height;
-
-	m_camera_make = exif.Make.c_str();
-	m_camera_model = exif.Model.c_str();
-
-	// Capture info
-	m_exposure_time = exif.ExposureTime;
-	m_iso_speed = exif.ISOSpeedRatings;
-	m_bits_per_sample = exif.BitsPerSample;
-	// self.vignetting_center = None
-	// self.vignetting_polynomial = None
-	// self.spectral_irradiance = None
-	// self.horizontal_irradiance = None
-	// self.irradiance_scale_to_si = None
-
-	m_focal_length = exif.FocalLength;
-
-	m_camera_str_osfm = GetCameraString(true);
-	m_camera_str_odm = GetCameraString(false);
 
 	//    try:
 	//        if 'Image Tag 0xC61A' in tags:
@@ -331,19 +288,21 @@ int Photo::parse_exif_values(XString file_name)
 	//                if camera_projection in projections:
 	//                    self.camera_projection = camera_projection
 
-	//            # Normalize YPR conventions (assuming nadir camera)
-	//            # Yaw: 0 --> top of image points north
-	//            # Yaw: 90 --> top of image points east
-	//            # Yaw: 270 --> top of image points west
-	//            # Pitch: 0 --> nadir camera
-	//            # Pitch: 90 --> camera is looking forward
-	//            # Roll: 0 (assuming gimbal)
-	//            if self.has_ypr():
-	//                if self.camera_make.lower() in ['dji', 'hasselblad']:
-	//                    self.pitch = 90 + self.pitch
+	// Normalize YPR conventions (assuming nadir camera)
+	//		Yaw: 0 --> top of image points north
+	//		Yaw: 90 --> top of image points east
+	//		Yaw: 270 --> top of image points west
+	//		Pitch: 0 --> nadir camera
+	//		Pitch: 90 --> camera is looking forward
+	//		Roll: 0 (assuming gimbal)
+	if (has_ypr())
+	{
+		if (m_camera_make.CompareNoCase("dji") || m_camera_make.CompareNoCase("hasselblad"))
+			m_pitch_deg += 90.0;
 
-	//                if self.camera_make.lower() == 'sensefly':
-	//                    self.roll *= -1
+		if (m_camera_make.CompareNoCase("sensefly"))
+			m_roll_deg *= -1.0;
+	}
 
 	//        # self.set_attr_from_xmp_tag('center_wavelength', xtags, [
 	//        #     'Camera:CentralWavelength'
@@ -396,15 +355,15 @@ XString Photo::GetCameraString(bool opensfm)
 	return camera_str;
 }
 
-SizeType Photo::find_largest_photo_dims(const std::vector<Project::ImageType>& photos)
+SizeType Photo::find_largest_photo_dims(const std::vector<Photo>& photos)
 {
 	SizeType max_dims;
 	unsigned int max_mp = 0;
 
 	for (auto p : photos)
 	{
-		unsigned int w = p.exif.ImageWidth;
-		unsigned int h = p.exif.ImageHeight;
+		unsigned int w = p.GetWidth();
+		unsigned int h = p.GetHeight();
 
 		if (w == 0 || h == 0)
 			continue;
@@ -421,33 +380,33 @@ SizeType Photo::find_largest_photo_dims(const std::vector<Project::ImageType>& p
 	return max_dims;
 }
 
-int Photo::find_largest_photo_dim(const std::vector<Project::ImageType>& photos)
+int Photo::find_largest_photo_dim(const std::vector<Photo>& photos)
 {
 	int max_dim = 0;
 
 	for (auto p : photos)
 	{
-		int w = p.exif.ImageWidth;
-		int h = p.exif.ImageHeight;
+		int w = p.GetWidth();
+		int h = p.GetHeight();
 
 		if (w == 0 || h == 0)
 			continue;
 
-		max_dim = max(max_dim, max(w, h));
+		max_dim = std::max(max_dim, std::max(w, h));
 	}
 
 	return max_dim;
 }
 
-Project::ImageType* Photo::find_largest_photo(const std::vector<Project::ImageType>& photos)
+Photo* Photo::find_largest_photo(const std::vector<Photo>& photos)
 {
-	Project::ImageType* max_p = nullptr;
+	Photo* max_p = nullptr;
 
 	int max_area = 0;
 	for (auto p : photos)
 	{
-		int w = p.exif.ImageWidth;
-		int h = p.exif.ImageHeight;
+		int w = p.GetWidth();
+		int h = p.GetHeight();
 
 		if (w == 0 || h == 0)
 			continue;
@@ -768,14 +727,14 @@ void Photo::compute_opk()
 //        else:
 //            return 0.0
 
-double Photo::CalcFocalRatio(easyexif::EXIFInfo exif)
+double Photo::CalcFocalRatio()
 {
 	double focal_ratio = 0.0;
 
 	double sensor_width = 0.0;
-	if (exif.LensInfo.FocalPlaneResolutionUnit > 0 && exif.LensInfo.FocalPlaneXResolution > 0.0)
+	if (m_imageEXIF.LensInfo.FocalPlaneResolutionUnit > 0 && m_imageEXIF.LensInfo.FocalPlaneXResolution > 0.0)
 	{
-		int resolution_unit = exif.LensInfo.FocalPlaneResolutionUnit;
+		int resolution_unit = m_imageEXIF.LensInfo.FocalPlaneResolutionUnit;
 		double mm_per_unit = 0.0;
 		if (resolution_unit == 2)		// inch
 			mm_per_unit = 25.4;
@@ -794,14 +753,14 @@ double Photo::CalcFocalRatio(easyexif::EXIFInfo exif)
 
 		if (mm_per_unit > 0.0)
 		{
-			double pixels_per_unit = exif.LensInfo.FocalPlaneXResolution;
-			if (pixels_per_unit <= 0.0 && exif.LensInfo.FocalPlaneYResolution > 0.0)
-				pixels_per_unit = exif.LensInfo.FocalPlaneYResolution;
+			double pixels_per_unit = m_imageEXIF.LensInfo.FocalPlaneXResolution;
+			if (pixels_per_unit <= 0.0 && m_imageEXIF.LensInfo.FocalPlaneYResolution > 0.0)
+				pixels_per_unit = m_imageEXIF.LensInfo.FocalPlaneYResolution;
 
-			if ((pixels_per_unit > 0.0) && (exif.ImageWidth > 0))
+			if ((pixels_per_unit > 0.0) && (m_imageEXIF.ImageWidth > 0))
 			{
 				double units_per_pixel = 1.0 / pixels_per_unit;
-				sensor_width = (double)exif.ImageWidth * units_per_pixel * mm_per_unit;
+				sensor_width = (double)m_imageEXIF.ImageWidth * units_per_pixel * mm_per_unit;
 			}
 		}
 	}
@@ -810,8 +769,8 @@ double Photo::CalcFocalRatio(easyexif::EXIFInfo exif)
 	double focal;
 	//if "EXIF FocalLengthIn35mmFilm" in tags:
 	//	focal_35 = self.float_value(tags["EXIF FocalLengthIn35mmFilm"])
-	if (exif.FocalLength > 0.0)
-		focal = exif.FocalLength;
+	if (m_imageEXIF.FocalLength > 0.0)
+		focal = m_imageEXIF.FocalLength;
 	//if focal is None and "@aux:Lens" in xtags:
 	//	lens = self.get_xmp_tag(xtags, ["@aux:Lens"])
 	//	matches = re.search('([\d\.]+)mm', str(lens))
@@ -849,7 +808,7 @@ int Photo::get_yday(int mon, int day, int year)
 
 __int64 Photo::CalcUnixEpoch(XString dateTime)
 {
-	// Return seconds since Jan 1, 1950.
+	// Return seconds since Jan 1, 1970.
 	//
 	// Inputs:
 	//		dateTime = "YYYY:MM:SS hh:mm:ss"
@@ -902,6 +861,21 @@ int Photo::GetWidth()
 int Photo::GetHeight()
 {
 	return m_height;
+}
+
+int Photo::GetExifWidth()
+{
+	return m_exif_width;
+}
+
+int Photo::GetExifHeight()
+{
+	return m_exif_height;
+}
+
+int Photo::GetOrientation()
+{
+	return m_orientation;
 }
 
 double Photo::GetLatitude()
@@ -962,14 +936,20 @@ bool Photo::is_thermal()
 	// Added for support DJI H20T camera sensor
 	if ((m_camera_make == "DJI") && (m_camera_model == "ZH20T") && (m_width == 640 && m_height == 512))
 		return true;
-	//return self.band_name.upper() in ["LWIR"] # TODO: more?
+	if (m_band_name.CompareNoCase("LWIR"))	// TODO: more ?
+		return true;
+
 	return false;
 }
 
 bool Photo::is_rgb()
 {
-	//        return self.band_name.upper() in ["RGB", "REDGREENBLUE"]
-	return true;
+	if (m_band_name.CompareNoCase("RGB"))
+		return true;
+	if (m_band_name.CompareNoCase("REDGREENBLUE"))
+		return true;
+
+	return false;
 }
 
 bool Photo::has_geo()
@@ -1015,3 +995,12 @@ int Photo::GetBandIndex()
 	return m_band_index;
 }
 
+XString Photo::GetFileName()
+{
+	return ms_file_name;
+}
+
+double Photo::GetFNumber()
+{
+	return m_fnumber;
+}

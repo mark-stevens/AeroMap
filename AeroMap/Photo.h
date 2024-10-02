@@ -3,7 +3,8 @@
 
 #include <opencv2/opencv.hpp>	// OpenCV
 
-#include "Project.h"
+#include "TinyEXIF.h"
+#include "Calc.h"
 
 class Photo
 {
@@ -12,8 +13,13 @@ public:
 	Photo(XString file_name);
 	~Photo();
 
+	XString GetFileName();
+
 	int GetWidth();
 	int GetHeight();
+	int GetExifWidth();
+	int GetExifHeight();
+	int GetOrientation();
 
 	XString GetMake();
 	XString GetModel();
@@ -23,6 +29,7 @@ public:
 	double GetAltitude();
 
 	double GetExposureTime();
+	double GetFNumber();
 	int GetIsoSpeed();
 	int GetBitsPerSample();
 
@@ -47,15 +54,16 @@ public:
 	bool has_geo();
 	bool has_ypr();
 
-	static SizeType find_largest_photo_dims(const std::vector<Project::ImageType>& photos);
-	static int find_largest_photo_dim(const std::vector<Project::ImageType>& photos);
-	static Project::ImageType* find_largest_photo(const std::vector<Project::ImageType>& photos);
+	static SizeType find_largest_photo_dims(const std::vector<Photo>& photos);
+	static int find_largest_photo_dim(const std::vector<Photo>& photos);
+	static Photo* find_largest_photo(const std::vector<Photo>& photos);
 	static double get_mm_per_unit(int resolution_unit);
 
 private:
 
 	XString ms_file_name;
 	cv::Mat m_image;
+	TinyEXIF::EXIFInfo m_imageEXIF;
 
 	int m_width;
 	int m_height;
@@ -142,7 +150,7 @@ private:
 	int get_yday(int mon, int day, int year);
 	__int64 CalcUnixEpoch(XString dateTime);
 
-	double CalcFocalRatio(easyexif::EXIFInfo exif);
+	double CalcFocalRatio();
 	XString GetCameraString(bool opensfm);
 };
 

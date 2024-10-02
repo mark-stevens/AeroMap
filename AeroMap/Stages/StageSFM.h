@@ -2,7 +2,6 @@
 #define STAGESFM_H
 
 #include "AeroMap.h"		// application header
-#include "exif.h"			// easy exif header
 #include "Stage.h"			// base class
 
 class StageSFM : Stage

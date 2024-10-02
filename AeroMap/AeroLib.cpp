@@ -215,7 +215,7 @@ namespace AeroLib
 
 	__int64 CalcUnixEpoch(const char* dateTime)
 	{
-		// Return seconds since Jan 1, 1950.
+		// Return seconds since Jan 1, 1970.
 		//
 		// Inputs:
 		//		dateTime = "YYYY:MM:SS hh:mm:ss"
@@ -248,90 +248,6 @@ namespace AeroLib
 		}
 
 		return epoch;
-	}
-
-	double CalcFocalRatio(easyexif::EXIFInfo exif)
-	{
-		double focal_ratio = 0.0;
-		
-		double sensor_width = 0.0;
-		if (exif.LensInfo.FocalPlaneResolutionUnit > 0 && exif.LensInfo.FocalPlaneXResolution > 0.0)
-		{
-			int resolution_unit = exif.LensInfo.FocalPlaneResolutionUnit;
-			double mm_per_unit = 0.0;
-			if (resolution_unit == 2)		// inch
-				mm_per_unit = 25.4;
-			else if (resolution_unit == 3)		// cm
-				mm_per_unit = 10;
-			else if (resolution_unit == 4)		// mm
-				mm_per_unit = 1;
-			else if (resolution_unit == 5)		// um
-				mm_per_unit = 0.001;
-			else
-			{
-				Logger::Write(__FUNCTION__, "Unknown EXIF resolution unit: %d", resolution_unit);
-				assert(false);
-				return focal_ratio;
-			}
-
-			if (mm_per_unit > 0.0)
-			{
-				double pixels_per_unit = exif.LensInfo.FocalPlaneXResolution;
-				if (pixels_per_unit <= 0.0 && exif.LensInfo.FocalPlaneYResolution > 0.0)
-					pixels_per_unit = exif.LensInfo.FocalPlaneYResolution;
-	
-				if ((pixels_per_unit > 0.0) && (exif.ImageWidth > 0))
-				{
-					double units_per_pixel = 1.0 / pixels_per_unit;
-					sensor_width = (double)exif.ImageWidth * units_per_pixel * mm_per_unit;
-				}
-			}
-		}
-
-		//focal_35 = None
-		double focal;
-		//if "EXIF FocalLengthIn35mmFilm" in tags:
-		//	focal_35 = self.float_value(tags["EXIF FocalLengthIn35mmFilm"])
-		if (exif.FocalLength > 0.0)
-			focal = exif.FocalLength;
-		//if focal is None and "@aux:Lens" in xtags:
-		//	lens = self.get_xmp_tag(xtags, ["@aux:Lens"])
-		//	matches = re.search('([\d\.]+)mm', str(lens))
-		//	if matches:
-		//		focal = float(matches.group(1))
-
-		//if focal_35 is not None and focal_35 > 0:
-		//	focal_ratio = focal_35 / 36.0  # 35mm film produces 36x24mm pictures.
-		//else:
-		//	if not sensor_width:
-		//		sensor_width = sensor_data().get(sensor_string, None)
-		if ((sensor_width > 0.0) && (focal > 0.0))
-			focal_ratio = focal / sensor_width;
-		else
-			focal_ratio = 0.85;
-
-		return focal_ratio;
-	}
-
-	XString GetCameraString(easyexif::EXIFInfo exif, bool opensfm)
-	{
-		// Return camera id string.
-		//
-		
-		double focal_ratio = CalcFocalRatio(exif);
-
-		XString camera_str = XString::Format("%s %s %d %d brown %0.4f",
-			exif.Make.c_str(), exif.Model.c_str(),
-			exif.ImageWidth, exif.ImageHeight, 
-			focal_ratio);
-
-		// opensfm and odm have slightly different formats
-		if (opensfm)
-			camera_str.Insert(0, "v2 ");
-
-		camera_str.MakeLower();
-
-		return camera_str;
 	}
 
 	double Median(std::vector<double>& v)

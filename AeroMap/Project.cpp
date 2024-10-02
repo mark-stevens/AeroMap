@@ -310,6 +310,8 @@ int Project::LoadImageList()
 {
 	GetApp()->LogWrite("Loading images...");
 
+	m_ImageList.clear();
+
 	m_MaxDim = 0;
 	m_MaxDims.cx = 0;
 	m_MaxDims.cy = 0;
@@ -331,60 +333,24 @@ int Project::LoadImageList()
 			if ((file_name.EndsWithNoCase(".jpg") == false) && (file_name.EndsWithNoCase(".jpeg") == false))
 				continue;
 
-			ImageType entry;
-			entry.file_name = file_path;
-
-			// Read the JPEG file into a buffer
-			FILE* fp = fopen(file_path.c_str(), "rb");
-			if (!fp)
-			{
-				Logger::Write(__FUNCTION__, "Unable to open image file: '%s'", file_path.c_str());
-				return -1;
-			}
-			fseek(fp, 0, SEEK_END);
-			unsigned long fsize = ftell(fp);
-			rewind(fp);
-			unsigned char* buf = new unsigned char[fsize];
-			if (fread(buf, 1, fsize, fp) != fsize)
-			{
-				Logger::Write(__FUNCTION__, "Unable to open read file: '%s'", file_path.c_str());
-				delete[] buf;
-				return -2;
-			}
-			fclose(fp);
-
-			// Parse EXIF
-			int code = entry.exif.parseFrom(buf, fsize);
-			delete[] buf;
-			if (code)
-			{
-				Logger::Write(__FUNCTION__, "Error parsing EXIF: '%s' (code %d)", file_path.c_str(), code);
-				return -3;
-			}
-
-			// pre-computed values
-
-			entry.focal_ratio = AeroLib::CalcFocalRatio(entry.exif);
-			entry.epoch = AeroLib::CalcUnixEpoch(entry.exif.DateTime.c_str());
-			entry.camera_str_osfm = AeroLib::GetCameraString(entry.exif, true);
-			entry.camera_str_odm = AeroLib::GetCameraString(entry.exif, false);
+			// replaces struct-based m_ImageList
+			Photo photo(file_path.c_str());
+			m_ImageList.push_back(photo);
 
 			// record max sizes
 
-			if (m_MaxDim < (int)entry.exif.ImageWidth)
-				m_MaxDim = (int)entry.exif.ImageWidth;
-			if (m_MaxDim < (int)entry.exif.ImageHeight)
-				m_MaxDim = (int)entry.exif.ImageHeight;
+			if (m_MaxDim < (int)photo.GetWidth())
+				m_MaxDim = (int)photo.GetWidth();
+			if (m_MaxDim < (int)photo.GetHeight())
+				m_MaxDim = (int)photo.GetHeight();
 
-			int mp = entry.exif.ImageWidth * entry.exif.ImageHeight;
+			int mp = photo.GetWidth() * photo.GetHeight();
 			if (mp > max_mp)
 			{
 				max_mp = mp;
-				m_MaxDims.cx = entry.exif.ImageWidth;
-				m_MaxDims.cy = entry.exif.ImageHeight;
+				m_MaxDims.cx = photo.GetWidth();
+				m_MaxDims.cy = photo.GetHeight();
 			}
-
-			m_ImageList.push_back(entry);
 		}
 	}
 
@@ -396,7 +362,7 @@ int Project::GetImageCount()
 	return (int)m_ImageList.size();
 }
 
-const std::vector<Project::ImageType>& Project::GetImageList()
+const std::vector<Photo>& Project::GetImageList()
 {
 	// Return a const reference to the image list.
 	//
@@ -410,16 +376,13 @@ bool Project::VerifyGpsExif()
 	//
 
 	bool valid = true;
-	for (ImageType image : m_ImageList)
+	for (Photo image : m_ImageList)
 	{
 		// easy exif can't query for existence, so we rely on lla being all zeros
-		if ((image.exif.GeoLocation.Latitude == 0.0) && (image.exif.GeoLocation.Longitude == 0))
+		if (image.has_geo() == false)
 		{
-			if (image.exif.GeoLocation.Altitude == 0.0)
-			{
-				valid = false;
-				break;
-			}
+			valid = false;
+			break;
 		}
 	}
 

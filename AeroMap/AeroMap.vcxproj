@@ -165,7 +165,6 @@
     <ClCompile Include="..\Common\Cube.cpp" />
     <ClCompile Include="..\Common\Cylinder.cpp" />
     <ClCompile Include="..\Common\DateTime.cpp" />
-    <ClCompile Include="..\Common\exif.cpp" />
     <ClCompile Include="..\Common\GLManager.cpp" />
     <ClCompile Include="..\Common\ImageFile.cpp" />
     <ClCompile Include="..\Common\JpegFile.cpp" />
@@ -432,7 +431,6 @@
     <ClInclude Include="..\Common\Cube.h" />
     <ClInclude Include="..\Common\Cylinder.h" />
     <ClInclude Include="..\Common\DateTime.h" />
-    <ClInclude Include="..\Common\exif.h" />
     <ClInclude Include="..\Common\GLManager.h" />
     <ClInclude Include="..\Common\ImageFile.h" />
     <ClInclude Include="..\Common\JpegFile.h" />

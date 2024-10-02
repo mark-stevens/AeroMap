@@ -1,7 +1,6 @@
 #ifndef STAGEDATASET_H
 #define STAGEDATASET_H
 
-#include "exif.h"			// easy exif header
 #include "AeroMap.h"		// application header
 #include "Stage.h"			// base class
 

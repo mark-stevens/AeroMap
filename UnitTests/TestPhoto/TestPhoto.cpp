@@ -43,6 +43,9 @@ TEST(Photo, rgb)
 		CHECK(make == "Canon");
 		CHECK(model == "Canon DIGITAL IXUS 120 IS");
 
+		CHECK(photo.is_rgb() == true);
+		CHECK(photo.is_thermal() == false);
+
 		XString band_name = photo.GetBandName();
 		CHECK(band_name == "RGB");
 		int band_index = photo.GetBandIndex();
@@ -51,6 +54,7 @@ TEST(Photo, rgb)
 		// actually 3000 x 4000, but think both exif libs "interpret" based on Orientation
 		LONGS_EQUAL(4000, photo.GetWidth());
 		LONGS_EQUAL(3000, photo.GetHeight());
+		LONGS_EQUAL(6, photo.GetOrientation());
 
 		double lat = photo.GetLatitude();
 		double lon = photo.GetLongitude();
@@ -61,6 +65,9 @@ TEST(Photo, rgb)
 
 		DOUBLES_EQUAL(0.002, photo.GetExposureTime(), 1E-4);
 		LONGS_EQUAL(125, photo.GetIsoSpeed());
+		double fnumber = photo.GetFNumber();
+		DOUBLES_EQUAL(2.8, fnumber, 0.01);
+
 		//LONGS_EQUAL(24, photo.GetBitsPerSample());		//TODO:
 
 		XString date = photo.GetDateTime();
@@ -100,6 +107,9 @@ TEST(Photo, thermal)
 		CHECK(make == "DJI");
 		CHECK(model == "FLIR");
 
+		CHECK(photo.is_thermal() == true);
+		CHECK(photo.is_rgb() == false);
+
 		XString band_name = photo.GetBandName();
 		CHECK(band_name == "LWIR");
 		int band_index = photo.GetBandIndex();
@@ -109,7 +119,7 @@ TEST(Photo, thermal)
 		int h = photo.GetHeight();
 		LONGS_EQUAL(640, photo.GetWidth());
 		LONGS_EQUAL(512, photo.GetHeight());
-		//GetOrientation()
+		int orient = photo.GetOrientation();
 
 		double lat = photo.GetLatitude();
 		double lon = photo.GetLongitude();
@@ -124,6 +134,9 @@ TEST(Photo, thermal)
 		// believe simply doesn't have
 		DOUBLES_EQUAL(0.0, photo.GetExposureTime(), 0.0);
 		LONGS_EQUAL(0, photo.GetIsoSpeed());
+
+		double fnumber = photo.GetFNumber();
+		DOUBLES_EQUAL(1.4, fnumber, 0.01);
 
 		XString date = photo.GetDateTime();
 		CHECK(date == "2019:02:05 13:49:04");

@@ -110,14 +110,14 @@ double Gsd::opensfm_reconstruction_average_gsd(XString reconstruction_json, bool
             cv::Vec3d shot_origin = Shots::get_origin(vec_rot, vec_trx);
             double shot_height = shot_origin[2];
             // another instance where single camera is assumed
-            Project::ImageType image = GetProject().GetImageList()[0];
-            double focal_ratio = image.focal_ratio;
+            Photo image = GetProject().GetImageList()[0];
+            double focal_ratio = image.GetFocalRatio();
             //focal_ratio = camera.get('focal', camera.get('focal_x'))
             //if not focal_ratio:
             //    log.ODM_WARNING("Cannot parse focal values from %s. This is likely an unsupported camera model." % reconstruction_json)
             //    return None
 
-            double gsd = calculate_gsd_from_focal_ratio(focal_ratio, shot_height - ground_height, image.exif.ImageWidth);
+            double gsd = calculate_gsd_from_focal_ratio(focal_ratio, shot_height - ground_height, image.GetWidth());
             gsds.push_back(gsd);
         }
     }
@@ -149,7 +149,7 @@ double Gsd::calculate_gsd_from_focal_ratio(double focal_ratio, double flight_hei
     return ((flight_height * 100.0) / image_width) / focal_ratio;
 }
 
-int Gsd::image_max_size(const std::vector<Project::ImageType>& photos, double target_resolution, XString reconstruction_json, double gsd_error_estimate,
+int Gsd::image_max_size(const std::vector<Photo>& photos, double target_resolution, XString reconstruction_json, double gsd_error_estimate,
     bool ignore_gsd, bool has_gcp)
 {
     // Inputs:
@@ -173,10 +173,10 @@ int Gsd::image_max_size(const std::vector<Project::ImageType>& photos, double ta
     else
         isf = image_scale_factor(target_resolution, reconstruction_json, gsd_error_estimate, has_gcp);
     
-    for (Project::ImageType image : photos)
+    for (Photo image : photos)
     {
-        max_width = std::max((int)image.exif.ImageWidth, max_width);
-        max_height = std::max((int)image.exif.ImageHeight, max_height);
+        max_width = std::max((int)image.GetWidth(), max_width);
+        max_height = std::max((int)image.GetHeight(), max_height);
     }
     
     max_size = ceil(std::max(max_width, max_height)*isf);

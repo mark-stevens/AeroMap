@@ -2,7 +2,6 @@
 #define AEROLIB_H
 
 #include "AeroMap.h"
-#include "exif.h"		// easy exif header
 
 namespace AeroLib
 {
@@ -31,9 +30,7 @@ namespace AeroLib
 
 	Georef ReadGeoref();
 
-	double  CalcFocalRatio(easyexif::EXIFInfo exif);
 	__int64 CalcUnixEpoch(const char* dateTime);
-	XString GetCameraString(easyexif::EXIFInfo exif, bool opensfm);
 
 	double Median(std::vector<double>& v);
 	double Mean(std::vector<double>& v);

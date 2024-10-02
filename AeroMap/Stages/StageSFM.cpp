@@ -148,29 +148,29 @@ int StageSFM::WriteExif()
 	XString exif_path = XString::CombinePath(tree.opensfm, "exif");
 	AeroLib::CreateFolder(exif_path);
 
-	for (Project::ImageType image : GetProject().GetImageList())
+	for (Photo image : GetProject().GetImageList())
 	{
 		// file names look like: 'IMG_0428.JPG.exif'
-		XString file_name = XString::CombinePath(exif_path, image.file_name.GetFileName() + ".exif");
+		XString file_name = XString::CombinePath(exif_path, image.GetFileName().GetFileName() + ".exif");
 		FILE* pFile = fopen(file_name.c_str(), "wt");
 		if (pFile)
 		{
 			fprintf(pFile, "{\n");
-			fprintf(pFile, "    \"make\": \"%s\",\n", image.exif.Make.c_str());
-			fprintf(pFile, "    \"model\": \"%s\",\n", image.exif.Model.c_str());
-			fprintf(pFile, "    \"width\": %d,\n", image.exif.ImageWidth);
-			fprintf(pFile, "    \"height\": %d,\n", image.exif.ImageHeight);
+			fprintf(pFile, "    \"make\": \"%s\",\n", image.GetMake().c_str());
+			fprintf(pFile, "    \"model\": \"%s\",\n", image.GetModel().c_str());
+			fprintf(pFile, "    \"width\": %d,\n", image.GetWidth());
+			fprintf(pFile, "    \"height\": %d,\n", image.GetHeight());
 			fprintf(pFile, "    \"projection_type\": \"brown\",\n");
-			fprintf(pFile, "    \"focal_ratio\": %0.16f,\n", image.focal_ratio);
-			fprintf(pFile, "    \"orientation\": %d,\n", image.exif.Orientation);
-			fprintf(pFile, "    \"capture_time\": %I64u.0,\n", image.epoch);		//1299256936.0
+			fprintf(pFile, "    \"focal_ratio\": %0.16f,\n", image.GetFocalRatio());
+			fprintf(pFile, "    \"orientation\": %d,\n", image.GetOrientation());
+			fprintf(pFile, "    \"capture_time\": %I64u.0,\n", image.GetEpoch());		//1299256936.0
 			fprintf(pFile, "    \"gps\": {\n");
-			fprintf(pFile, "        \"latitude\": %0.15f,\n", image.exif.GeoLocation.Latitude);
-			fprintf(pFile, "        \"longitude\": %0.15f,\n", image.exif.GeoLocation.Longitude);
-			fprintf(pFile, "        \"altitude\": %0.12f,\n", image.exif.GeoLocation.Altitude);
+			fprintf(pFile, "        \"latitude\": %0.15f,\n", image.GetLatitude());
+			fprintf(pFile, "        \"longitude\": %0.15f,\n", image.GetLongitude());
+			fprintf(pFile, "        \"altitude\": %0.12f,\n", image.GetAltitude());
 			fprintf(pFile, "        \"dop\": 10.0\n");		//TODO: odm gets '10', i get '0'
 			fprintf(pFile, "    },\n");
-			fprintf(pFile, "    \"camera\": \"%s\"\n", image.camera_str_osfm.c_str());
+			fprintf(pFile, "    \"camera\": \"%s\"\n", image.GetCameraStrOSFM().c_str());
 			fprintf(pFile, "}\n");
 
 			fclose(pFile);
@@ -194,9 +194,9 @@ int StageSFM::WriteImageListText()
 	FILE* pFile = fopen(file_name.c_str(), "wt");
 	if (pFile)
 	{
-		for (Project::ImageType image : GetProject().GetImageList())
+		for (Photo image : GetProject().GetImageList())
 		{
-			fprintf(pFile, "%s\n", image.file_name.c_str());
+			fprintf(pFile, "%s\n", image.GetFileName().c_str());
 		}
 
 		fclose(pFile);
@@ -220,15 +220,15 @@ int StageSFM::WriteCameraModelsJson()
 	FILE* pFile = fopen(file_name.c_str(), "wt");
 	if (pFile)
 	{
-		Project::ImageType image = GetProject().GetImageList()[0];
+		Photo image = GetProject().GetImageList()[0];
 
 		fprintf(pFile, "{\n");
-		fprintf(pFile, "    \"%s\": {\n", image.camera_str_osfm.c_str());
+		fprintf(pFile, "    \"%s\": {\n", image.GetCameraStrOSFM().c_str());
 		fprintf(pFile, "        \"projection_type\": \"brown\",\n");
-		fprintf(pFile, "        \"width\": %d,\n", image.exif.ImageWidth);
-		fprintf(pFile, "        \"height\": %d,\n", image.exif.ImageHeight);
-		fprintf(pFile, "        \"focal_x\": %0.16f,\n", image.focal_ratio);
-		fprintf(pFile, "        \"focal_y\": %0.16f,\n", image.focal_ratio);
+		fprintf(pFile, "        \"width\": %d,\n", image.GetWidth());
+		fprintf(pFile, "        \"height\": %d,\n", image.GetHeight());
+		fprintf(pFile, "        \"focal_x\": %0.16f,\n", image.GetFocalRatio());
+		fprintf(pFile, "        \"focal_y\": %0.16f,\n", image.GetFocalRatio());
 		fprintf(pFile, "        \"c_x\": 0.0,\n");
 		fprintf(pFile, "        \"c_y\": 0.0,\n");
 		fprintf(pFile, "        \"k1\": 0.0,\n");	//TODO: how are these calculated?
@@ -375,15 +375,15 @@ int StageSFM::WriteCamerasJson()
 	FILE* pFile = fopen(file_name.c_str(), "wt");
 	if (pFile)
 	{
-		Project::ImageType image = GetProject().GetImageList()[0];
+		Photo image = GetProject().GetImageList()[0];
 
 		fprintf(pFile, "{\n");
-		fprintf(pFile, "    \"%s\": {\n", image.camera_str_odm.c_str());
+		fprintf(pFile, "    \"%s\": {\n", image.GetCameraStrODM().c_str());
 		fprintf(pFile, "        \"projection_type\": \"brown\",\n");
-		fprintf(pFile, "        \"width\": %d,\n", image.exif.ImageWidth);
-		fprintf(pFile, "        \"height\": %d,\n", image.exif.ImageHeight);
-		fprintf(pFile, "        \"focal_x\": %0.16f,\n", image.focal_ratio);
-		fprintf(pFile, "        \"focal_y\": %0.16f,\n", image.focal_ratio);
+		fprintf(pFile, "        \"width\": %d,\n", image.GetWidth());
+		fprintf(pFile, "        \"height\": %d,\n", image.GetHeight());
+		fprintf(pFile, "        \"focal_x\": %0.16f,\n", image.GetFocalRatio());
+		fprintf(pFile, "        \"focal_y\": %0.16f,\n", image.GetFocalRatio());
 		fprintf(pFile, "        \"c_x\": 0.0,\n");
 		fprintf(pFile, "        \"c_y\": 0.0,\n");
 		fprintf(pFile, "        \"k1\": 0.0,\n");	//TODO: how are these calculated?

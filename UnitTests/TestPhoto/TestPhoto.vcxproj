@@ -93,7 +93,6 @@
   <ItemGroup>
     <ClCompile Include="..\..\AeroMap\Photo.cpp" />
     <ClCompile Include="..\..\Common\Calc.cpp" />
-    <ClCompile Include="..\..\Common\exif.cpp" />
     <ClCompile Include="..\..\Common\Logger.cpp" />
     <ClCompile Include="..\..\Common\TextFile.cpp" />
     <ClCompile Include="..\..\Common\TinyEXIF.cpp" />
@@ -110,7 +109,6 @@
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
     </CustomBuild>
     <ClInclude Include="..\..\Common\Calc.h" />
-    <ClInclude Include="..\..\Common\exif.h" />
     <ClInclude Include="..\..\Common\Logger.h" />
     <ClInclude Include="..\..\Common\TextFile.h" />
     <ClInclude Include="..\..\Common\TinyEXIF.h" />
