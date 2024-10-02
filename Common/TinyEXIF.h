@@ -247,6 +247,7 @@ namespace TinyEXIF {
 											// 2: location of the main subject as coordinates (first value is the X coordinate and second is the Y coordinate)
 											// 3: area of the main subject as a circle (first value is the center X coordinate, second is the center Y coordinate, and third is the diameter)
 											// 4: area of the main subject as a rectangle (first value is the center X coordinate, second is the center Y coordinate, third is the width of the area, and fourth is the height of the area)
+		std::string BandName;				// Currently only "" or value of "FLIR:BandName"
 		struct TINYEXIF_LIB Calibration_t { // Camera calibration information
 			double FocalLength;             // Focal length (pixels)
 			double OpticalCenterX;          // Principal point X (pixels)

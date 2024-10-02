@@ -1,6 +1,8 @@
 #ifndef PHOTO_H
 #define PHOTO_H
 
+#include <opencv2/opencv.hpp>	// OpenCV
+
 #include "Project.h"
 
 class Photo
@@ -10,18 +12,11 @@ public:
 	Photo(XString file_name);
 	~Photo();
 
-	bool is_thermal();
-	bool is_rgb();
-
-	bool has_geo();
-	bool has_ypr();
-	bool has_speed();
+	int GetWidth();
+	int GetHeight();
 
 	XString GetMake();
 	XString GetModel();
-	
-	int GetWidth();
-	int GetHeight();
 
 	double GetLatitude();
 	double GetLongitude();
@@ -40,6 +35,18 @@ public:
 	XString GetCameraStrOSFM();
 	XString GetCameraStrODM();
 
+	XString GetBandName();
+	int     GetBandIndex();
+
+	bool is_thermal();
+	bool is_rgb();
+
+	bool has_speed();
+	VEC3 get_speed();
+
+	bool has_geo();
+	bool has_ypr();
+
 	static SizeType find_largest_photo_dims(const std::vector<Project::ImageType>& photos);
 	static int find_largest_photo_dim(const std::vector<Project::ImageType>& photos);
 	static Project::ImageType* find_largest_photo(const std::vector<Project::ImageType>& photos);
@@ -48,6 +55,7 @@ public:
 private:
 
 	XString ms_file_name;
+	cv::Mat m_image;
 
 	int m_width;
 	int m_height;
@@ -92,23 +100,23 @@ private:
 	//        self.utc_time = None
 
 	// OPK angles
-	//        self.yaw = None
-	//        self.pitch = None
-	//        self.roll = None
-	//        self.omega = None
-	//        self.phi = None
-	//        self.kappa = None
+	double m_yaw_deg;
+	double m_pitch_deg;
+	double m_roll_deg;
+	double m_omega;
+	double m_phi;
+	double m_kappa;
 
-	// DLS
+	// DLS - Downwelling Light Sensor
 	//        self.sun_sensor = None
-	//        self.dls_yaw = None
-	//        self.dls_pitch = None
-	//        self.dls_roll = None
+	//        self.dls_yaw = None			// xmp tag 'DLS:Yaw'
+	//        self.dls_pitch = None			// 'DLS:Pitch'
+	//        self.dls_roll = None			// 'DLS:Roll'
 
 	// Aircraft speed
-	//        self.speed_x = None
-	//        self.speed_y = None
-	//        self.speed_z = None
+	double m_speedx;
+	double m_speedy;
+	double m_speedz;
 
 	// self.center_wavelength = None
 	// self.bandwidth = None
@@ -117,13 +125,6 @@ private:
 	//        self.gps_xy_stddev = None # Dilution of Precision X/Y
 	//        self.gps_z_stddev = None # Dilution of Precision Z
 
-	double m_yaw;
-	double m_pitch;
-	double m_roll;
-
-	double m_omega;
-	double m_phi;
-	double m_kappa;
 
 	bool m_has_geo;
 	bool m_has_ypr;
@@ -142,7 +143,7 @@ private:
 	__int64 CalcUnixEpoch(XString dateTime);
 
 	double CalcFocalRatio(easyexif::EXIFInfo exif);
-	XString GetCameraString(easyexif::EXIFInfo exif, bool opensfm);
+	XString GetCameraString(bool opensfm);
 };
 
 #endif // #ifndef PHOTO_H

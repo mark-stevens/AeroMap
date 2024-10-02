@@ -1,0 +1,113 @@
+     - ExifToolVersion                 : 12.97
+     - FileName                        : DJI_0058.jpg
+     - Directory                       : .
+     - FileSize                        : 742 kB
+     - ZoneIdentifier                  : Exists
+     - FileModifyDate                  : 2024:10:01 07:12:11-07:00
+     - FileAccessDate                  : 2024:10:02 07:18:58-07:00
+     - FileCreateDate                  : 2019:02:05 12:49:04-08:00
+     - FilePermissions                 : -rw-rw-rw-
+     - FileType                        : JPEG
+     - FileTypeExtension               : jpg
+     - MIMEType                        : image/jpeg
+0x0000 JFIFVersion                     : 1.01
+     - ExifByteOrder                   : Little-endian (Intel, II)
+0x010f Make                            : DJI
+0x0110 Model                           : FLIR
+0x011a XResolution                     : 1
+0x011b YResolution                     : 1
+0x0128 ResolutionUnit                  : None
+0x0131 Software                        : 01.15.00.48
+0x0132 ModifyDate                      : 2019:02:05 13:49:04
+0x829d FNumber                         : 1.4
+0x9202 ApertureValue                   : 1.6
+0x920a FocalLength                     : 9.0 mm
+0x9291 SubSecTimeOriginal              : 187
+0xa210 FocalPlaneResolutionUnit        : mm
+0x0001 GPSLatitudeRef                  : North
+0x0003 GPSLongitudeRef                 : East
+0x0005 GPSAltitudeRef                  : Above Sea Level
+0x0012 GPSMapDatum                     : WGS-84
+0x0103 Compression                     : JPEG (old-style)
+0x0201 ThumbnailOffset                 : 576
+0x0202 ThumbnailLength                 : 7610
+     - About                           : DJI Meta Data
+     - AbsoluteAltitude                : 318.358826
+     - RelativeAltitude                : 50.599998
+     - GimbalRollDegree                : 0.000000
+     - GimbalYawDegree                 : -179.300003
+     - GimbalPitchDegree               : -90.000000
+     - FlightRollDegree                : 3.000000
+     - FlightYawDegree                 : 179.600006
+     - FlightPitchDegree               : -4.700000
+     - CentralTemperature              : 25
+     - TlinearGain                     : 0
+     - BandName                        : LWIR
+     - CentralWavelength               : 10000
+     - WavelengthFWHM                  : 4500
+0x0004 CreatorSoftware                 : ATAU_RBFO
+0x0001 RawThermalImageWidth            : 640
+0x0002 RawThermalImageHeight           : 512
+0x0010 RawThermalImageType             : TIFF
+0x0010 RawThermalImage                 : (Binary data 655564 bytes, use -b option to extract)
+0x0020 Emissivity                      : 1.00
+0x0024 ObjectDistance                  : 20.00 m
+0x0028 ReflectedApparentTemperature    : 22.0 C
+0x002c AtmosphericTemperature          : 22.0 C
+0x0030 IRWindowTemperature             : 22.0 C
+0x0034 IRWindowTransmission            : 1.00
+0x003c RelativeHumidity                : 50.0 %
+0x0058 PlanckR1                        : 17096.453
+0x005c PlanckB                         : 1428
+0x0060 PlanckF                         : 1
+0x0070 AtmosphericTransAlpha1          : 0.006569
+0x0074 AtmosphericTransAlpha2          : 0.012620
+0x0078 AtmosphericTransBeta1           : -0.002276
+0x007c AtmosphericTransBeta2           : -0.006670
+0x0080 AtmosphericTransX               : 1.900000
+0x0090 CameraTemperatureRangeMax       : 135.0 C
+0x0094 CameraTemperatureRangeMin       : -25.0 C
+0x0098 CameraTemperatureMaxClip        : 150.0 C
+0x009c CameraTemperatureMinClip        : -60.0 C
+0x00a0 CameraTemperatureMaxWarn        : 135.0 C
+0x00a4 CameraTemperatureMinWarn        : -25.0 C
+0x00a8 CameraTemperatureMaxSaturated   : 150.0 C
+0x00ac CameraTemperatureMinSaturated   : -60.0 C
+0x00d4 CameraModel                     : 
+0x00f4 CameraPartNumber                : 
+0x0104 CameraSerialNumber              : 
+0x0114 CameraSoftware                  : 
+0x0170 LensModel                       : 
+0x0190 LensPartNumber                  : 
+0x01a0 LensSerialNumber                : 
+0x01b4 FieldOfView                     : 0.0 deg
+0x01ec FilterModel                     : 
+0x01fc FilterPartNumber                : 
+0x021c FilterSerialNumber              : 
+0x0308 PlanckO                         : -1586
+0x030c PlanckR2                        : 0.076002479
+0x0310 RawValueRangeMin                : 0
+0x0312 RawValueRangeMax                : 65535
+0x0338 RawValueMedian                  : 3114
+0x033c RawValueRange                   : 2295
+0x0384 DateTimeOriginal                : 2019:02:05 13:49:04.183+00:00
+0x0390 FocusStepCount                  : 0
+0x045c FocusDistance                   : 0.0 m
+0x0464 FrameRate                       : 0
+     - ImageWidth                      : 640
+     - ImageHeight                     : 512
+     - EncodingProcess                 : Baseline DCT, Huffman coding
+     - BitsPerSample                   : 8
+     - ColorComponents                 : 3
+     - YCbCrSubSampling                : YCbCr4:2:0 (2 2)
+     - Aperture                        : 1.4
+     - ImageSize                       : 640x512
+     - Megapixels                      : 0.328
+     - SubSecDateTimeOriginal          : 2019:02:05 13:49:04.187
+     - ThumbnailImage                  : (Binary data 7610 bytes, use -b option to extract)
+     - PeakSpectralSensitivity         : 10.1 um
+     - GPSAltitude                     : 318.3 m Above Sea Level
+     - GPSLatitude                     : 46 deg 31' 3.11" N
+     - GPSLongitude                    : 6 deg 33' 46.93" E
+     - FocalLength35efl                : 9.0 mm
+     - GPSPosition                     : 46 deg 31' 3.11" N, 6 deg 33' 46.93" E

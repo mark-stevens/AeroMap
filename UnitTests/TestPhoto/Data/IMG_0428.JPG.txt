@@ -1,0 +1,172 @@
+     - ExifToolVersion                 : 12.97
+     - FileName                        : IMG_0428.JPG
+     - Directory                       : .
+     - FileSize                        : 3.8 MB
+     - FileModifyDate                  : 2024:10:01 07:06:22-07:00
+     - FileAccessDate                  : 2024:10:01 11:13:34-07:00
+     - FileCreateDate                  : 2024:10:01 07:06:22-07:00
+     - FilePermissions                 : -rw-rw-rw-
+     - FileType                        : JPEG
+     - FileTypeExtension               : jpg
+     - MIMEType                        : image/jpeg
+     - ExifByteOrder                   : Little-endian (Intel, II)
+0x010e ImageDescription                : 
+0x010f Make                            : Canon
+0x0110 Model                           : Canon DIGITAL IXUS 120 IS
+0x0112 Orientation                     : Rotate 90 CW
+0x011a XResolution                     : 180
+0x011b YResolution                     : 180
+0x0128 ResolutionUnit                  : inches
+0x0132 ModifyDate                      : 2011:03:04 16:42:16
+0x0213 YCbCrPositioning                : Co-sited
+0x829a ExposureTime                    : 1/500
+0x829d FNumber                         : 2.8
+0x8827 ISO                             : 125
+0x9000 ExifVersion                     : 0221
+0x9003 DateTimeOriginal                : 2011:03:04 16:42:16
+0x9004 CreateDate                      : 2011:03:04 16:42:16
+0x9101 ComponentsConfiguration         : Y, Cb, Cr, -
+0x9102 CompressedBitsPerPixel          : 3
+0x9201 ShutterSpeedValue               : 1/501
+0x9202 ApertureValue                   : 2.8
+0x9205 MaxApertureValue                : 2.8
+0x9209 Flash                           : Off, Did not fire
+0x920a FocalLength                     : 5.0 mm
+0x0001 MacroMode                       : Normal
+0x0002 SelfTimer                       : Off
+0x0003 Quality                         : Fine
+0x0004 CanonFlashMode                  : Off
+0x0005 ContinuousDrive                 : Single
+0x0007 FocusMode                       : Single
+0x0009 RecordMode                      : JPEG
+0x000a CanonImageSize                  : Large
+0x000b EasyMode                        : Manual
+0x000c DigitalZoom                     : None
+0x000d Contrast                        : Normal
+0x000e Saturation                      : Normal
+0x000f Sharpness                       : 0
+0x0010 CameraISO                       : Auto
+0x0011 MeteringMode                    : Evaluative
+0x0012 FocusRange                      : Auto
+0x0013 AFPoint                         : Face Detect
+0x0014 CanonExposureMode               : Program AE
+0x0016 LensType                        : n/a
+0x0017 MaxFocalLength                  : 20 mm
+0x0018 MinFocalLength                  : 5 mm
+0x0019 FocalUnits                      : 1000/mm
+0x001a MaxAperture                     : 2.8
+0x001b MinAperture                     : 8
+0x001d FlashBits                       : (none)
+0x0020 FocusContinuous                 : Single
+0x0021 AESetting                       : Normal AE
+0x0022 ImageStabilization              : Off
+0x0024 ZoomSourceWidth                 : 4000
+0x0025 ZoomTargetWidth                 : 4000
+0x0027 SpotMeteringMode                : Center
+0x0029 ManualFlashOutput               : n/a
+0x0000 FocalType                       : Zoom
+0x0002 FocalPlaneXSize                 : 6.35 mm
+0x0003 FocalPlaneYSize                 : 4.75 mm
+0x0001 AutoISO                         : 116
+0x0002 BaseISO                         : 100
+0x0003 MeasuredEV                      : 12.53
+0x0004 TargetAperture                  : 2.8
+0x0005 TargetExposureTime              : 1/501
+0x0006 ExposureCompensation            : 0
+0x0007 WhiteBalance                    : Auto
+0x0008 SlowShutter                     : Off
+0x0009 SequenceNumber                  : 0
+0x000a OpticalZoomCode                 : 0
+0x000d FlashGuideNumber                : 0
+0x000f FlashExposureComp               : 0
+0x0010 AutoExposureBracketing          : Off
+0x0011 AEBBracketValue                 : 0
+0x0012 ControlMode                     : Camera Local Control
+0x0013 FocusDistanceUpper              : 1.06 m
+0x0014 FocusDistanceLower              : 0 m
+0x0018 BulbDuration                    : 0
+0x001a CameraType                      : Compact
+0x001b AutoRotate                      : Rotate 90 CW
+0x001c NDFilter                        : Off
+0x001d SelfTimer2                      : 0
+0x0021 FlashOutput                     : 0
+0x0006 CanonImageType                  : IMG:DIGITAL IXUS 120 IS JPEG
+0x0007 CanonFirmwareVersion            : Firmware Version 1.02
+0x0008 FileNumber                      : 101-0428
+0x0009 OwnerName                       : 
+0x0018 Rotation                        : 90
+0x00a8 CameraTemperature               : 17 C
+0x0010 CanonModelID                    : PowerShot SD940 IS / Digital IXUS 120 IS / IXY Digital 220 IS
+0x0001 AFAreaMode                      : Auto
+0x0002 NumAFPoints                     : 9
+0x0003 ValidAFPoints                   : 9
+0x0004 CanonImageWidth                 : 4000
+0x0005 CanonImageHeight                : 3000
+0x0006 AFImageWidth                    : 100
+0x0007 AFImageHeight                   : 100
+0x0008 AFAreaWidths                    : 18 18 18 18 18 18 18 18 18
+0x0009 AFAreaHeights                   : 18 18 18 18 18 18 18 18 18
+0x000a AFAreaXPositions                : -18 0 18 -18 0 18 -18 0 18
+0x000b AFAreaYPositions                : -18 -18 -18 0 0 0 18 18 18
+0x000c AFPointsInFocus                 : 7
+0x000e PrimaryAFPoint                  : 7
+0x0013 ThumbnailImageValidArea         : 0 0 0 0
+0x001c DateStampMode                   : Off
+0x0002 MyColorMode                     : Off
+0x001e FirmwareRevision                : 1.02 rev 3.00
+0x0023 Categories                      : (none)
+0x0004 IntelligentContrast             : Off
+0x0028 ImageUniqueID                   : 35ad9323a4d997a9066c8693730ee0f2
+0x00d0 VRDOffset                       : 0
+0x9286 UserComment                     : 
+0xa000 FlashpixVersion                 : 0100
+0xa001 ColorSpace                      : sRGB
+0xa002 ExifImageWidth                  : 4000
+0xa003 ExifImageHeight                 : 3000
+0x0001 InteropIndex                    : R98 - DCF basic file (sRGB)
+0x0002 InteropVersion                  : 0100
+0x1001 RelatedImageWidth               : 4000
+0x1002 RelatedImageHeight              : 3000
+0xa20e FocalPlaneXResolution           : 16393.44262
+0xa20f FocalPlaneYResolution           : 16393.44262
+0xa210 FocalPlaneResolutionUnit        : inches
+0xa217 SensingMethod                   : One-chip color area
+0xa300 FileSource                      : Digital Camera
+0xa401 CustomRendered                  : Normal
+0xa402 ExposureMode                    : Auto
+0xa404 DigitalZoomRatio                : 1
+0xa406 SceneCaptureType                : Standard
+0x0000 GPSVersionID                    : 2.3.0.0
+0x0001 GPSLatitudeRef                  : North
+0x0003 GPSLongitudeRef                 : East
+0x0006 GPSAltitude                     : 980.2969925 m
+0x000f GPSTrack                        : 237.0305344
+0x0103 Compression                     : JPEG (old-style)
+0x0201 ThumbnailOffset                 : 3616
+0x0202 ThumbnailLength                 : 6700
+     - ImageWidth                      : 4000
+     - ImageHeight                     : 3000
+     - EncodingProcess                 : Baseline DCT, Huffman coding
+     - BitsPerSample                   : 8
+     - ColorComponents                 : 3
+     - YCbCrSubSampling                : YCbCr4:2:2 (2 1)
+     - DriveMode                       : Single-frame Shooting
+     - Lens                            : 5.0 - 20.0 mm
+     - ShootingMode                    : Program AE
+     - Aperture                        : 2.8
+     - ImageSize                       : 4000x3000
+     - LensID                          : Unknown 5-20mm
+     - Megapixels                      : 12.0
+     - ScaleFactor35efl                : 5.6
+     - ShutterSpeed                    : 1/500
+     - ThumbnailImage                  : (Binary data 6700 bytes, use -b option to extract)
+     - GPSLatitude                     : 46 deg 33' 11.36" N
+     - GPSLongitude                    : 6 deg 41' 3.01" E
+     - Lens35efl                       : 5.0 - 20.0 mm (35 mm equivalent: 27.9 - 111.7 mm)
+     - CircleOfConfusion               : 0.005 mm
+     - DOF                             : 0.37 m (0.40 - 0.78 m)
+     - FOV                             : 65.6 deg
+     - FocalLength35efl                : 5.0 mm (35 mm equivalent: 27.9 mm)
+     - GPSPosition                     : 46 deg 33' 11.36" N, 6 deg 41' 3.01" E
+     - HyperfocalDistance              : 1.66 m
+     - LightValue                      : 11.6
