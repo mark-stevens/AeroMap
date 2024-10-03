@@ -3,6 +3,7 @@
 //
 
 #include "GSd.h"
+#include "Photo.h"
 #include "StageOrtho.h"
 
 int StageOrtho::Run()
@@ -55,6 +56,7 @@ int StageOrtho::Run()
 
         XString model_file = tree.odm_textured_model_obj;
 
+        XString bands = "";
         double in_paint = -1.0;
         //if reconstruction.multi_camera:
         {
@@ -89,9 +91,10 @@ int StageOrtho::Run()
             if (georef.is_valid)
                 in_paint = 1.0;
 
-            //    # Thermal dataset with single band
-            //    if reconstruction.photos[0].band_name.upper() == "LWIR":
-            //        kwargs['bands'] = '-bands lwir'
+            // Thermal dataset with single band
+            Photo photo = GetProject().GetImageList()[0];
+            if (photo.GetBandName().CompareNoCase("LWIR"))
+                bands = "lwir";
         }
 
         // run odm_orthophoto
@@ -121,6 +124,11 @@ int StageOrtho::Run()
         args.push_back(tree.odm_orthophoto_corners.c_str());
         args.push_back("-resolution");
         args.push_back(XString::Format("%0.1f", resolution).c_str());
+        if (bands.GetLength() > 0)
+        {
+            args.push_back("-bands");
+            args.push_back(bands.c_str());
+        }
         if (in_paint > 0.0)
         {
             args.push_back("-inpaintThreshold");

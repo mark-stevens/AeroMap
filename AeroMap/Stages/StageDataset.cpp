@@ -53,9 +53,11 @@ int StageDataset::InitGeoref()
 	
 	for (Photo image : GetProject().GetImageList())
 	{
-		//	if photo.latitude is None or photo.longitude is None:
-		//		log.ODM_WARNING("GPS position not available for %s" % photo.filename)
-		//		continue
+		if (image.has_geo() == false)
+		{
+			Logger::Write(__FUNCTION__, "GPS position not available for %s", image.GetFileName().c_str());
+			continue;
+		}
 
 		if (utm_zone == 0)
 		{
@@ -69,8 +71,11 @@ int StageDataset::InitGeoref()
 		coords.push_back(VEC3(x, y, image.GetAltitude()));
 	}
 
-	//if utm_zone is None:
-	//	raise Exception("No images seem to have GPS information")
+	if (utm_zone == 0)
+	{
+		Logger::Write(__FUNCTION__, "No images seem to have GPS information");
+		return -1;
+	}
 
 	// Calculate average
 	double dx = 0.0;

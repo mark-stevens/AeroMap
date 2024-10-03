@@ -1,0 +1,8 @@
+project
+	name=
+	srs=---
+drone
+	input = D:/test_thermal/images
+	output = D:/test_thermal
+	gcp_file = 
+lidar
