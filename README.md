@@ -13,7 +13,6 @@ Now that I'm hooked, I am continuing development. Here is my near-term road map:
     
     - Ground Control Points
     - Multi-Spectral Data Sets
-    - Thermal Data Sets
     - View/Analyze Outputs Directly in AeroMap
     - Installer
     
