@@ -270,6 +270,7 @@
     <ClCompile Include="ProfileWindow.cpp" />
     <ClCompile Include="Project.cpp" />
     <ClCompile Include="RasterFile.cpp" />
+    <ClCompile Include="Reconstruction.cpp" />
     <ClCompile Include="Release\moc_AboutDlg.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
@@ -585,6 +586,7 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
     </CustomBuild>
+    <ClInclude Include="Reconstruction.h" />
     <ClInclude Include="ShaderLib.h" />
     <ClInclude Include="Shots.h" />
     <ClInclude Include="SkyBox.h" />
