@@ -5,6 +5,7 @@
 
 #include "TinyEXIF.h"
 #include "Calc.h"
+#include "XString.h"
 
 class Photo
 {

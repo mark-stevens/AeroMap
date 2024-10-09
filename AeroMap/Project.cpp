@@ -46,6 +46,7 @@ Project::Project()
 	, m_MaxDim(0)
 	, m_MaxDims(0, 0)
 	, m_undistorted_image_max_size(0)
+	, mp_Reconstruction(nullptr)
 {
 	m_ImageList.reserve(128);
 	m_LidarFiles.reserve(32);
@@ -354,6 +355,13 @@ int Project::LoadImageList()
 		}
 	}
 
+	//TODO:
+	//not at all sure this how i want to structure it - but it must be init'd
+	//after images loaded so this makes sense as starting point; also prob just
+	//want it to have a ref to the image list, not actually pass it in making a copy
+	delete mp_Reconstruction;
+	mp_Reconstruction = new Reconstruction(m_ImageList);
+
 	return GetImageCount();
 }
 
@@ -450,6 +458,8 @@ void Project::FreeResources()
 		}
 	}
 	m_LidarFiles.clear();
+
+	delete mp_Reconstruction;
 }
 
 int Project::GetGcpCount()

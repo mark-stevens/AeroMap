@@ -2,19 +2,27 @@
 // Port of odm reconstruction class.
 //
 
+#include "Logger.h"
 #include "Reconstruction.h"
 
-Reconstruction::Reconstruction(const std::vector<Photo>& photos)
+Reconstruction::Reconstruction()
+{
+	m_photos.clear();
+	m_multi_camera.clear();
+}
+
+Reconstruction::Reconstruction(std::vector<Photo>& photos)
 	: m_photos(photos)
 {
 	//class ODM_Reconstruction(object):
 	//def __init__(self, photos):
-	//    self.photos = photos
+	//    m_photos = photos
 	//    self.georef = None
 	//    self.gcp = None
 	//    self.multi_camera = self.detect_multi_camera()
 	//    self.filter_photos()
 
+	detect_multi_camera();
 }
 
 Reconstruction::~Reconstruction()
@@ -32,27 +40,48 @@ void Reconstruction::detect_multi_camera()
 	//    band_photos = {}
 	//    band_indexes = {}
 
-	//    for p in self.photos:
+	m_multi_camera.clear();
+
+	for (auto p : m_photos)
 	{
+		XString band = p.GetBandName();
+
+		// if entry doesn't exist, create it
+		int band_index = get_band_index(band);
+		if (band_index == -1)
+		{
+			band_type b;
+			b.name = band;
+			m_multi_camera.push_back(b);
+			band_index = (int)m_multi_camera.size() - 1;
+		}
+
 	//        if not p.band_name in band_photos:
 	//            band_photos[p.band_name] = []
 	//        if not p.band_name in band_indexes:
 	//            band_indexes[p.band_name] = str(p.band_index)
-	//
-	//        band_photos[p.band_name].append(p)
+	
+		// add photo to this band's list
+		m_multi_camera[band_index].photos.push_back(p);
 	}
 
-	//    bands_count = len(band_photos)
-	//    if bands_count >= 2 and bands_count <= 8:
+	int bands_count = (int)m_multi_camera.size();
+	if (bands_count >= 2 && bands_count <= 8)
 	{
-		//        # Validate that all bands have the same number of images,
-	//        # otherwise this is not a multi-camera setup
-	//        img_per_band = len(band_photos[p.band_name])
-	//        for band in band_photos:
-	//            if len(band_photos[band]) != img_per_band:
-	//                log.ODM_ERROR("Multi-camera setup detected, but band \"%s\" (identified from \"%s\") has only %s images (instead of %s), perhaps images are missing or are corrupted. Please include all necessary files to process all bands and try again." % (band, band_photos[band][0].filename, len(band_photos[band]), img_per_band))
-	//                raise RuntimeError("Invalid multi-camera images")
-	//
+		// Validate that all bands have the same number of images,
+		// otherwise this is not a multi-camera setup
+		
+		int img_per_band = (int)m_multi_camera[0].photos.size();
+		for (auto band : m_multi_camera)
+		{
+			if (img_per_band != band.photos.size())
+			{
+				Logger::Write(__FUNCTION__, "Multi-camera setup detected, but band '%s' has only %d images (instead of %d).",
+					band.name.c_str(), band.photos.size(), img_per_band);
+				assert(false);
+			}
+		}
+
 	//        mc = []
 	//        for band_name in band_indexes:
 	//            mc.append({'name': band_name, 'photos': band_photos[band_name]})
@@ -93,9 +122,9 @@ void Reconstruction::filter_photos()
 //
 //            for band_to_remove in bands_to_remove:
 //                self.multi_camera = [b for b in self.multi_camera if b['name'] != band_to_remove]
-//                photos_before = len(self.photos)
-//                self.photos = [p for p in self.photos if p.band_name != band_to_remove]
-//                photos_after = len(self.photos)
+//                photos_before = len(m_photos)
+//                m_photos = [p for p in m_photos if p.band_name != band_to_remove]
+//                photos_after = len(m_photos)
 //
 //                log.ODM_WARNING("Skipping %s band (%s images)" % (band_to_remove, photos_before - photos_after))
 }
@@ -107,7 +136,7 @@ void Reconstruction::filter_photos()
 //    return self.is_georeferenced() and self.gcp is not None and self.gcp.exists()
 
 //def has_geotagged_photos(self):
-//    for photo in self.photos:
+//    for photo in m_photos:
 //        if photo.latitude is None and photo.longitude is None:
 //            return False
 //
@@ -125,7 +154,7 @@ void Reconstruction::filter_photos()
 //            # Convert GCP file to a UTM projection since the rest of the pipeline
 //            # does not handle other SRS well.
 //            rejected_entries = []
-//            utm_gcp = GCPFile(gcp.create_utm_copy(output_gcp_file, filenames=[p.filename for p in self.photos], rejected_entries=rejected_entries, include_extras=True))
+//            utm_gcp = GCPFile(gcp.create_utm_copy(output_gcp_file, filenames=[p.filename for p in m_photos], rejected_entries=rejected_entries, include_extras=True))
 //
 //            if not utm_gcp.exists():
 //                raise RuntimeError("Could not project GCP file to UTM. Please double check your GCP file for mistakes.")
@@ -171,7 +200,7 @@ void Reconstruction::filter_photos()
 //def georeference_with_gps(self, images_path, output_coords_file, output_model_txt_geo, rerun=False):
 //    try:
 //        if not io.file_exists(output_coords_file) or rerun:
-//            location.extract_utm_coords(self.photos, images_path, output_coords_file)
+//            location.extract_utm_coords(m_photos, images_path, output_coords_file)
 //        else:
 //            log.ODM_INFO("Coordinates file already exist: %s" % output_coords_file)
 //
@@ -210,6 +239,32 @@ void Reconstruction::filter_photos()
 //        return (None, None)
 
 //def get_photo(self, filename):
-//    for p in self.photos:
+//    for p in m_photos:
 //        if p.filename == filename:
 //            return p
+
+int Reconstruction::get_band_index(XString band_name)
+{
+	int index = -1;
+
+	for (int i = 0; i < m_multi_camera.size(); ++i)
+	{
+		if (band_name.CompareNoCase(m_multi_camera[i].name))
+		{
+			index = i;
+			break;
+		}
+	}
+
+	return index;
+}
+
+Reconstruction::band_type& Reconstruction::get_band(int band_index)
+{
+	return m_multi_camera[band_index];
+}
+
+bool Reconstruction::is_multi_camera()
+{
+	return m_multi_camera.size() > 1;
+}

@@ -4,6 +4,7 @@
 #include "Gis.h"
 #include "XString.h"
 #include "Photo.h"
+#include "Reconstruction.h"
 
 #include "gdal_priv.h"
 #include "cpl_conv.h"		// for CPLMalloc()
@@ -219,6 +220,8 @@ private:
 
 	XString ms_DroneInputPath;		// location of drone photogrammetry inputs
 	XString ms_DroneOutputPath;		// root folder that will receive outputs
+
+	Reconstruction* mp_Reconstruction;
 
 	int m_MaxDim;					// single largest image dimension
 	SizeType m_MaxDims;				// dimensions of largest image (max width x height)

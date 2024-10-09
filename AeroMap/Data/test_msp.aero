@@ -1,0 +1,8 @@
+project
+	name=
+	srs=---
+drone
+	input = D:/test_msp/images
+	output = D:/test_msp
+	gcp_file = 
+lidar
